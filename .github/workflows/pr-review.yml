@@ -1,0 +1,134 @@
+name: Multi-Agent PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Full history for better context
+      
+      - name: Checkout review system
+        uses: actions/checkout@v3
+        with:
+          repository: 4ndr-34/diploma-multi-agent  # Your main diploma repository
+          path: review-system
+          ref: main  # Or your branch name
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+        working-directory: review-system
+      
+      - name: Run Multi-Agent Review
+        id: review
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python .github/scripts/run_review.py \
+            --repo ${{ github.repository }} \
+            --pr ${{ github.event.pull_request.number }} \
+            --output review_results.json
+        working-directory: review-system
+      
+      - name: Post Review Comment
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('review-system/review_results.json', 'utf8'));
+            
+            // Format comment
+            let comment = `## 🤖 Multi-Agent PR Review\n\n`;
+            comment += `### Overall Assessment\n\n`;
+            comment += `- **Quality Score:** ${results.quality_score}% (Grade: ${results.quality_grade})\n`;
+            comment += `- **Risk Level:** ${results.risk_level.toUpperCase()}\n`;
+            comment += `- **Recommendation:** ${results.recommendation}\n`;
+            comment += `- **Total Findings:** ${results.total_findings}\n\n`;
+            
+            if (results.critical_findings > 0) {
+              comment += `⚠️ **${results.critical_findings} CRITICAL** issues found!\n\n`;
+            }
+            
+            comment += `### Findings by Category\n\n`;
+            for (const [agent, summary] of Object.entries(results.agent_summaries)) {
+              comment += `**${agent.charAt(0).toUpperCase() + agent.slice(1)}:** ${summary}\n\n`;
+            }
+            
+            if (results.priority_issues && results.priority_issues.length > 0) {
+              comment += `### Top Priority Issues\n\n`;
+              results.priority_issues.slice(0, 5).forEach((issue, i) => {
+                comment += `${i + 1}. **[${issue.severity.toUpperCase()}]** ${issue.type}\n`;
+                comment += `   - File: \`${issue.file}\`\n`;
+                comment += `   - ${issue.description}\n`;
+                comment += `   - **Action:** ${issue.action}\n\n`;
+              });
+            }
+            
+            comment += `---\n`;
+            comment += `*Analysis completed in ${results.execution_time.toFixed(1)}s*\n`;
+            comment += `*Agent consensus: ${results.agents_consensus}*\n`;
+            
+            // Post comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+      
+      - name: Set PR Status
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('review-system/review_results.json', 'utf8'));
+            
+            // Determine status based on quality
+            let state = 'success';
+            let description = 'PR looks good';
+            
+            if (results.critical_findings > 0) {
+              state = 'failure';
+              description = `${results.critical_findings} critical issues found`;
+            } else if (results.quality_score < 70) {
+              state = 'failure';
+              description = `Quality score too low: ${results.quality_score}%`;
+            } else if (results.quality_score < 80) {
+              state = 'success';
+              description = `Fair quality: ${results.quality_score}%`;
+            }
+            
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.pull_request.head.sha,
+              state: state,
+              context: 'Multi-Agent Review',
+              description: description,
+              target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.issue.number}`
+            });
+      
+      - name: Upload Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: review-results
+          path: review-system/review_results.json
