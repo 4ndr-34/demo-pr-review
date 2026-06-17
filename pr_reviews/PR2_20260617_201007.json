@@ -1,0 +1,152 @@
+{
+  "comparison_mode": true,
+  "pr_number": 2,
+  "pr_title": "Refactor: Improve security and performance with new features",
+  "quality_score": 47.5,
+  "quality_grade": "F",
+  "risk_level": "high",
+  "recommendation": "Request changes before merge",
+  "confidence": 0.85,
+  "total_findings": 9,
+  "critical_findings": 0,
+  "high_findings": 3,
+  "medium_findings": 5,
+  "agents_consensus": "full_agreement",
+  "execution_time": 0.0003173351287841797,
+  "agent_summaries": {
+    "security": "Security analysis: Found 2 issues (1 high, 1 medium)",
+    "performance": "Performance analysis: Found 3 issues (1 high, 2 medium)",
+    "architecture": "Architecture analysis: Found 4 issues (1 high, 2 medium, 1 low)"
+  },
+  "priority_issues": [
+    {
+      "priority": 1,
+      "severity": "high",
+      "agent": "security",
+      "type": "xss",
+      "file": "src/api/users.py",
+      "line": 95,
+      "description": "The 'render_user_profile' method is vulnerable to Cross-Site Scripting (XSS) attacks due to unsanitized user input being directly embedded into HTML.",
+      "recommendation": "Escape user-controlled data before including it in HTML to prevent XSS attacks. Use a secure templating engine or encoding functions.",
+      "action": "Should fix before merge",
+      "confidence": 1.0
+    },
+    {
+      "priority": 2,
+      "severity": "high",
+      "agent": "performance",
+      "type": "database_issue",
+      "file": "src/api/users.py",
+      "line": 37,
+      "description": "The get_all_users method lacks pagination, potentially loading all users at once.",
+      "recommendation": "Implement pagination using LIMIT and OFFSET in the SQL query to fetch users in batches.",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 3,
+      "severity": "high",
+      "agent": "architecture",
+      "type": "solid_violation",
+      "file": "src/api/users.py",
+      "line": 95,
+      "description": "The 'UsersAPI' class method 'create_user' violates the Single Responsibility Principle by handling both database operations and business logic.",
+      "recommendation": "Refactor the 'create_user' method to separate database operations into a data access class and keep business logic in the domain layer.",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 4,
+      "severity": "medium",
+      "agent": "security",
+      "type": "crypto_issue",
+      "file": "src/utils/data_processor.py",
+      "line": 32,
+      "description": "The 'cache_heavy_computation' method introduces a potential memory leak by storing computed results in an unbounded cache.",
+      "recommendation": "Implement a cache eviction policy to limit the size of the cache and prevent memory exhaustion. Consider using time-based or size-based cache expiration strategies.",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.9
+    },
+    {
+      "priority": 5,
+      "severity": "medium",
+      "agent": "performance",
+      "type": "inefficient_algorithm",
+      "file": "src/utils/data_processor.py",
+      "line": 18,
+      "description": "The process_items method has O(n\u00b2) complexity due to nested loops.",
+      "recommendation": "Use a dictionary to count duplicates in O(n) time instead of nested loops.",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.8
+    },
+    {
+      "priority": 6,
+      "severity": "medium",
+      "agent": "performance",
+      "type": "memory_leak",
+      "file": "src/utils/data_processor.py",
+      "line": 34,
+      "description": "The cache_heavy_computation method introduces a memory leak by growing the cache unbounded.",
+      "recommendation": "Implement a cache eviction policy to limit the cache size or clear old entries.",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.7
+    },
+    {
+      "priority": 7,
+      "severity": "medium",
+      "agent": "architecture",
+      "type": "solid_violation",
+      "file": "src/api/users.py",
+      "line": 37,
+      "description": "The method 'get_all_users' in the 'UsersAPI' class violates the Single Responsibility Principle by combining pagination logic with data retrieval.",
+      "recommendation": "Refactor the 'get_all_users' method to separate pagination logic into a dedicated class or method.",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.8
+    },
+    {
+      "priority": 8,
+      "severity": "medium",
+      "agent": "architecture",
+      "type": "code_smell",
+      "file": "src/utils/data_processor.py",
+      "line": 29,
+      "description": "The 'DataProcessor' class method 'cache_heavy_computation' introduces a potential memory leak by caching results indefinitely.",
+      "recommendation": "Implement a cache eviction strategy or limit the size of the cache to prevent memory leaks.",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.6
+    },
+    {
+      "priority": 9,
+      "severity": "low",
+      "agent": "architecture",
+      "type": "code_smell",
+      "file": "src/api/users.py",
+      "line": 95,
+      "description": "The 'UsersAPI' class method 'create_user' is growing in responsibility by directly interacting with the database and committing transactions.",
+      "recommendation": "Consider moving the database transaction handling to a separate class or method to improve separation of concerns.",
+      "action": "Consider addressing in future PR",
+      "confidence": 0.7
+    }
+  ],
+  "comparison": {
+    "single_agent": {
+      "quality_score": 54.0,
+      "quality_grade": "F",
+      "findings_count": 5,
+      "risk_level": "high",
+      "execution_time": 5.996952056884766
+    },
+    "multi_agent": {
+      "quality_score": 47.5,
+      "quality_grade": "F",
+      "findings_count": 9,
+      "risk_level": "high",
+      "execution_time": 0.0003173351287841797
+    },
+    "advantage": {
+      "more_findings": 4,
+      "quality_difference": -6.5,
+      "time_overhead": -5.9966347217559814
+    }
+  }
+}
