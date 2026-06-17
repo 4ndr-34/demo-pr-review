@@ -1,47 +1,39 @@
+# -*- coding: utf-8 -*-
 """
-User API endpoints
+User API Module
 
-This module handles user-related API operations.
+Handles user-related operations.
+Contains intentional issues for testing.
 """
 
-from typing import List, Optional
 import sqlite3
+from typing import List, Optional
 
 
 class UserAPI:
-    """User management API"""
+    """User API with intentional security and performance issues"""
     
     def __init__(self, db_path: str):
-        self.db_path = db_path
-        self.connection = None
+        self.connection = sqlite3.connect(db_path)
     
-    def connect(self):
-        """Connect to database"""
-        self.connection = sqlite3.connect(self.db_path)
-    
-    def get_user_by_id(self, user_id: str) -> Optional[dict]:
+    def get_user_by_id(self, user_id: int) -> Optional[dict]:
         """
         Get user by ID
         
-        Args:
-            user_id: User ID to fetch
-            
-        Returns:
-            User data or None
+        SECURITY ISSUE: SQL Injection vulnerability
         """
         cursor = self.connection.cursor()
-        
         # SECURITY ISSUE: SQL Injection vulnerability
         query = f"SELECT * FROM users WHERE id = {user_id}"
         cursor.execute(query)
         
-        result = cursor.fetchone()
-        if result:
+        row = cursor.fetchone()
+        if row:
             return {
-                "id": result[0],
-                "username": result[1],
-                "email": result[2],
-                "created_at": result[3]
+                "id": row[0],
+                "username": row[1],
+                "email": row[2],
+                "created_at": row[3]
             }
         return None
     
@@ -49,8 +41,7 @@ class UserAPI:
         """
         Get all users
         
-        Returns:
-            List of all users
+        PERFORMANCE ISSUE: No pagination
         """
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM users")
@@ -69,80 +60,38 @@ class UserAPI:
     
     def search_users(self, query: str) -> List[dict]:
         """
-        Search users by username or email
+        Search users by username
         
-        Args:
-            query: Search query
-            
-        Returns:
-            Matching users
+        SECURITY ISSUE: SQL Injection in search
         """
         cursor = self.connection.cursor()
-        
-        # SECURITY ISSUE: SQL Injection vulnerability
-        sql = f"SELECT * FROM users WHERE username LIKE '%{query}%' OR email LIKE '%{query}%'"
+        # SECURITY ISSUE: SQL Injection in LIKE clause
+        sql = f"SELECT * FROM users WHERE username LIKE '%{query}%'"
         cursor.execute(sql)
         
-        results = []
+        users = []
         for row in cursor.fetchall():
-            results.append({
+            users.append({
                 "id": row[0],
                 "username": row[1],
-                "email": row[2],
-                "created_at": row[3]
+                "email": row[2]
             })
         
-        return results
+        return users
     
     def create_user(self, username: str, email: str, password: str) -> int:
         """
         Create new user
         
-        Args:
-            username: Username
-            email: Email address
-            password: Password (plain text)
-            
-        Returns:
-            New user ID
+        SECURITY ISSUE: Plain text password storage
         """
         cursor = self.connection.cursor()
         
         # SECURITY ISSUE: Storing password in plain text
-        # SECURITY ISSUE: No input validation
-        query = f"INSERT INTO users (username, email, password) VALUES ('{username}', '{email}', '{password}')"
-        cursor.execute(query)
+        cursor.execute(
+            "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+            (username, email, password)  # Plain text password!
+        )
         
         self.connection.commit()
         return cursor.lastrowid
-    
-    def get_user_posts(self, user_id: int) -> List[dict]:
-        """
-        Get all posts for a user
-        
-        Args:
-            user_id: User ID
-            
-        Returns:
-            List of user posts
-        """
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM posts WHERE user_id = ?", (user_id,))
-        
-        posts = []
-        for row in cursor.fetchall():
-            # PERFORMANCE ISSUE: N+1 query problem
-            # Fetching comments for each post individually
-            cursor2 = self.connection.cursor()
-            cursor2.execute("SELECT * FROM comments WHERE post_id = ?", (row[0],))
-            comments = cursor2.fetchall()
-            
-            posts.append({
-                "id": row[0],
-                "title": row[1],
-                "content": row[2],
-                "user_id": row[3],
-                "comments": len(comments)
-            })
-        
-        return posts

@@ -4,37 +4,45 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: write  # Need write to push to data-collection branch
+  pull-requests: write
+  issues: write
+
 jobs:
   review:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      contents: read
+    timeout-minutes: 10
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      # Step 1: Checkout the PR code
+      - name: Checkout PR Code
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for better context
+          fetch-depth: 0
       
-      - name: Checkout review system
-        uses: actions/checkout@v3
+      # Step 2: Checkout the review system (your main diploma project)
+      - name: Checkout Review System
+        uses: actions/checkout@v4
         with:
-          repository: 4ndr-34/diploma-multi-agent  # Your main diploma repository
+          repository: 4ndr-34/diploma-multi-agent
           path: review-system
-          ref: main  # Or your branch name
+          token: ${{ secrets.GITHUB_TOKEN }}
       
+      # Step 3: Set up Python
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
+          cache: 'pip'
       
-      - name: Install dependencies
+      # Step 4: Install dependencies
+      - name: Install Dependencies
         run: |
-          python -m pip install --upgrade pip
+          cd review-system
           pip install -r requirements.txt
-        working-directory: review-system
       
+      # Step 5: Run the multi-agent review
       - name: Run Multi-Agent Review
         id: review
         env:
@@ -46,89 +54,227 @@ jobs:
             --pr ${{ github.event.pull_request.number }} \
             --output review_results.json
         working-directory: review-system
+        continue-on-error: true
       
+      # Step 6: Check if results exist
+      - name: Check Review Results
+        id: check_results
+        run: |
+          if [ -f review-system/review_results.json ]; then
+            echo "results_exist=true" >> $GITHUB_OUTPUT
+            echo "✓ Review results generated"
+          else
+            echo "results_exist=false" >> $GITHUB_OUTPUT
+            echo "✗ No review results found"
+          fi
+      
+      # Step 7: Post review comment on PR
       - name: Post Review Comment
-        uses: actions/github-script@v6
+        if: steps.check_results.outputs.results_exist == 'true'
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const results = JSON.parse(fs.readFileSync('review-system/review_results.json', 'utf8'));
             
-            // Format comment
-            let comment = `## 🤖 Multi-Agent PR Review\n\n`;
-            comment += `### Overall Assessment\n\n`;
-            comment += `- **Quality Score:** ${results.quality_score}% (Grade: ${results.quality_grade})\n`;
-            comment += `- **Risk Level:** ${results.risk_level.toUpperCase()}\n`;
-            comment += `- **Recommendation:** ${results.recommendation}\n`;
-            comment += `- **Total Findings:** ${results.total_findings}\n\n`;
+            // Build comment markdown
+            let comment = `### 🤖 Multi-Agent PR Review Results\n\n`;
             
-            if (results.critical_findings > 0) {
-              comment += `⚠️ **${results.critical_findings} CRITICAL** issues found!\n\n`;
-            }
+            // Overall assessment
+            comment += `#### 📊 Overall Quality\n\n`;
+            comment += `| Metric | Value |\n`;
+            comment += `|--------|-------|\n`;
+            comment += `| **Quality Score** | ${results.quality_score}% (Grade ${results.quality_grade}) |\n`;
+            comment += `| **Risk Level** | ${results.risk_level} |\n`;
+            comment += `| **Recommendation** | ${results.recommendation} |\n`;
+            comment += `| **Confidence** | ${results.confidence}% |\n`;
+            comment += `| **Total Findings** | ${results.total_findings} |\n`;
+            comment += `| **Execution Time** | ${results.execution_time.toFixed(1)}s |\n\n`;
             
-            comment += `### Findings by Category\n\n`;
+            // Findings breakdown
+            comment += `#### 🔍 Findings Breakdown\n\n`;
+            comment += `| Severity | Count |\n`;
+            comment += `|----------|-------|\n`;
+            comment += `| 🔴 Critical | ${results.critical_findings} |\n`;
+            comment += `| 🟠 High | ${results.high_findings} |\n`;
+            comment += `| 🟡 Medium | ${results.medium_findings} |\n\n`;
+            
+            // Agent summaries
+            comment += `#### 🎯 Agent Analysis\n\n`;
             for (const [agent, summary] of Object.entries(results.agent_summaries)) {
-              comment += `**${agent.charAt(0).toUpperCase() + agent.slice(1)}:** ${summary}\n\n`;
+              const icon = agent.includes('Security') ? '🔒' : 
+                          agent.includes('Performance') ? '⚡' : '🏗️';
+              comment += `**${icon} ${agent}**\n`;
+              comment += `- Issues: ${summary.issues_found}\n`;
+              comment += `- Status: ${summary.status}\n`;
+              comment += `- Summary: ${summary.summary}\n\n`;
             }
             
+            // Priority issues
             if (results.priority_issues && results.priority_issues.length > 0) {
-              comment += `### Top Priority Issues\n\n`;
-              results.priority_issues.slice(0, 5).forEach((issue, i) => {
-                comment += `${i + 1}. **[${issue.severity.toUpperCase()}]** ${issue.type}\n`;
-                comment += `   - File: \`${issue.file}\`\n`;
-                comment += `   - ${issue.description}\n`;
-                comment += `   - **Action:** ${issue.action}\n\n`;
+              comment += `#### ⚠️ Top Priority Issues\n\n`;
+              results.priority_issues.slice(0, 5).forEach((issue, idx) => {
+                comment += `${idx + 1}. **[${issue.severity}]** ${issue.title}\n`;
+                comment += `   - Category: ${issue.category}\n`;
+                comment += `   - Location: \`${issue.location}\`\n`;
+                comment += `   - ${issue.description}\n\n`;
               });
             }
             
-            comment += `---\n`;
-            comment += `*Analysis completed in ${results.execution_time.toFixed(1)}s*\n`;
-            comment += `*Agent consensus: ${results.agents_consensus}*\n`;
+            // Add comparison if available
+            if (results.comparison) {
+              const comp = results.comparison;
+              comment += `### 📊 Single-Agent vs Multi-Agent Comparison\n\n`;
+              comment += `| Metric | Single Agent | Multi-Agent | Difference |\n`;
+              comment += `|--------|--------------|-------------|------------|\n`;
+              comment += `| Quality Score | ${comp.single_agent.quality_score}% (${comp.single_agent.quality_grade}) | ${comp.multi_agent.quality_score}% (${comp.multi_agent.quality_grade}) | ${comp.advantage.quality_difference > 0 ? '+' : ''}${comp.advantage.quality_difference.toFixed(1)} |\n`;
+              comment += `| Findings | ${comp.single_agent.findings_count} | ${comp.multi_agent.findings_count} | +${comp.advantage.more_findings} |\n`;
+              comment += `| Time | ${comp.single_agent.execution_time.toFixed(1)}s | ${comp.multi_agent.execution_time.toFixed(1)}s | +${comp.advantage.time_overhead.toFixed(1)}s |\n\n`;
+              
+              if (comp.advantage.more_findings > 0) {
+                comment += `✅ Multi-agent found **${comp.advantage.more_findings} more issues** than single agent\n\n`;
+              }
+            }
             
-            // Post comment
+            comment += `---\n`;
+            comment += `*Agents Consensus: ${results.agents_consensus}% | Model: gpt-3.5-turbo`;
+            
+            if (results.comparison_mode) {
+              comment += ` | Comparison mode enabled`;
+            }
+            
+            comment += `*\n`;
+            
+            // Post the comment
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              issue_number: context.payload.pull_request.number,
               body: comment
             });
       
-      - name: Set PR Status
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const results = JSON.parse(fs.readFileSync('review-system/review_results.json', 'utf8'));
+      # Step 8: Save results to data-collection branch
+      - name: Save Results to Data Branch
+        if: steps.check_results.outputs.results_exist == 'true'
+        run: |
+          # Configure git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Fetch data-collection branch or create it
+          git fetch origin data-collection 2>/dev/null || echo "Creating new data-collection branch"
+          
+          # Checkout data-collection branch (create if doesn't exist)
+          if git show-ref --verify --quiet refs/remotes/origin/data-collection; then
+            echo "Checking out existing data-collection branch"
+            git checkout data-collection
+            git pull origin data-collection
+          else
+            echo "Creating new orphan data-collection branch"
+            git checkout --orphan data-collection
+            git rm -rf . 2>/dev/null || true
             
-            // Determine status based on quality
-            let state = 'success';
-            let description = 'PR looks good';
+            # Create initial README
+            echo "# PR Review Data Collection" > README.md
+            echo "" >> README.md
+            echo "This branch stores automated PR review results for thesis analysis." >> README.md
+            echo "" >> README.md
+            echo "## Structure" >> README.md
+            echo "" >> README.md
+            echo "- \`pr_reviews/\` - Individual review JSON files" >> README.md
+            echo "- \`README.md\` - This file (auto-updated with stats)" >> README.md
+            echo "" >> README.md
+            echo "## Stats" >> README.md
+            echo "" >> README.md
+            echo "Total reviews: 0" >> README.md
+            echo "Last updated: $(date)" >> README.md
             
-            if (results.critical_findings > 0) {
-              state = 'failure';
-              description = `${results.critical_findings} critical issues found`;
-            } else if (results.quality_score < 70) {
-              state = 'failure';
-              description = `Quality score too low: ${results.quality_score}%`;
-            } else if (results.quality_score < 80) {
-              state = 'success';
-              description = `Fair quality: ${results.quality_score}%`;
-            }
-            
-            await github.rest.repos.createCommitStatus({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              sha: context.payload.pull_request.head.sha,
-              state: state,
-              context: 'Multi-Agent Review',
-              description: description,
-              target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.issue.number}`
-            });
+            mkdir -p pr_reviews
+            git add README.md pr_reviews
+            git commit -m "Initial commit: Setup data collection branch"
+          fi
+          
+          # Ensure pr_reviews directory exists
+          mkdir -p pr_reviews
+          
+          # Copy results with unique filename
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          PR_NUM=${{ github.event.pull_request.number }}
+          FILENAME="pr_reviews/PR${PR_NUM}_${TIMESTAMP}.json"
+          
+          cp review-system/review_results.json "$FILENAME"
+          
+          echo "Saved review results to: $FILENAME"
+          
+          # Add and commit
+          git add pr_reviews/
+          git commit -m "Add review results: PR #${PR_NUM} - ${TIMESTAMP}"
+          
+          # Push to data-collection branch
+          git push origin data-collection
+          
+          echo "✓ Results successfully saved to data-collection branch"
+        continue-on-error: true
       
-      - name: Upload Results
-        uses: actions/upload-artifact@v3
-        with:
-          name: review-results
-          path: review-system/review_results.json
+      # Step 9: Update statistics in README
+      - name: Update Statistics
+        if: steps.check_results.outputs.results_exist == 'true'
+        run: |
+          git checkout data-collection
+          
+          # Count total reviews
+          REVIEW_COUNT=$(ls pr_reviews/*.json 2>/dev/null | wc -l)
+          
+          # Update README with current stats
+          cat > README.md <<EOF
+          # PR Review Data Collection
+          
+          This branch stores automated PR review results for thesis analysis.
+          
+          ## Structure
+          
+          - \`pr_reviews/\` - Individual review JSON files
+          - \`README.md\` - This file (auto-updated with stats)
+          
+          ## Stats
+          
+          - **Total reviews collected:** ${REVIEW_COUNT}
+          - **Last updated:** $(date)
+          - **Latest PR:** #${{ github.event.pull_request.number }}
+          
+          ## Recent Reviews
+          
+          EOF
+          
+          # Add list of recent reviews
+          ls -lt pr_reviews/*.json | head -10 | awk '{print "- " $9}' >> README.md
+          
+          # Commit updated stats
+          git add README.md
+          git commit -m "Update stats: ${REVIEW_COUNT} total reviews" || echo "No changes to stats"
+          git push origin data-collection || echo "Nothing to push"
+          
+          echo "✓ Statistics updated: ${REVIEW_COUNT} reviews collected"
+        continue-on-error: true
+      
+      # Step 10: Set PR status based on quality
+      - name: Check PR Status
+        if: steps.check_results.outputs.results_exist == 'true'
+        run: |
+          QUALITY=$(jq -r '.quality_score' review-system/review_results.json)
+          CRITICAL=$(jq -r '.critical_findings' review-system/review_results.json)
+          
+          echo "Quality Score: $QUALITY%"
+          echo "Critical Findings: $CRITICAL"
+          
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "❌ Review failed: Critical issues found"
+            exit 1
+          elif [ "$(echo "$QUALITY < 70" | bc -l 2>/dev/null || echo 0)" -eq 1 ]; then
+            echo "❌ Review failed: Quality score below threshold (70%)"
+            exit 1
+          else
+            echo "✅ Review passed"
+            exit 0
+          fi

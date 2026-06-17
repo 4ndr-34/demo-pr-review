@@ -1,48 +1,29 @@
-# Demo Project - Multi-Agent PR Review
+# Demo PR Review Project
 
-This is a demonstration project showcasing the multi-agent PR review system.
+This project is designed to test the multi-agent PR review system.
 
 ## Purpose
 
-- Demonstrate automated PR review with multi-agent system
-- Provide examples of different code quality issues
-- Test GitHub Actions integration
-- Evaluate thesis hypothesis in real-world scenario
+Contains intentional code issues to validate that the review system can detect:
+- Security vulnerabilities (SQL injection, XSS, weak passwords)
+- Performance issues (N+1 queries, O(n²) algorithms)
+- Architecture smells (god classes, code duplication, SOLID violations)
 
-## Setup
+## Usage
 
-1. Fork this repository
-2. Add repository secrets:
-   - `OPENAI_API_KEY` - Your OpenAI API key
-   - `GITHUB_TOKEN` - Automatically provided by GitHub
-3. Create a PR to trigger the review workflow
+1. Create a branch
+2. Make changes
+3. Open a Pull Request
+4. Automated review runs via GitHub Actions
+5. Results posted as PR comment
 
-## Features
+## Data Collection
 
-- Automatic PR review on every pull request
-- Multi-agent analysis (Security, Performance, Architecture)
-- Results posted as PR comments
-- Quality score and grade assignment
+All review results are automatically saved to the `data-collection` branch for thesis analysis.
 
-## Sample PRs to Create
+## Testing Scenarios
 
-Create PRs with these issues to test the system:
-
-1. **Security Issues** - SQL injection, XSS vulnerabilities
-2. **Performance Issues** - N+1 queries, inefficient algorithms
-3. **Architecture Issues** - SOLID violations, code smells
-4. **Clean Code** - Well-written code to test positive cases
-
-## Project Structure
-
-```
-demo-project/
-├── src/
-│   ├── api/          # API endpoints
-│   ├── models/       # Data models
-│   └── utils/        # Utility functions
-├── tests/            # Test files
-├── .github/
-│   └── workflows/    # GitHub Actions
-└── README.md
-```
+- Fix security issues → See quality score improve
+- Add performance optimization → Verify detection
+- Refactor architecture → Check pattern recognition
+- Submit clean code → Confirm positive feedback
