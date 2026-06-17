@@ -1,0 +1,47 @@
+{
+  "comparison_mode": false,
+  "pr_number": 1,
+  "pr_title": "Test: First automated review with data collection",
+  "quality_score": 99.0,
+  "quality_grade": "A+",
+  "risk_level": "low",
+  "recommendation": "Approve",
+  "confidence": 0.82,
+  "total_findings": 2,
+  "critical_findings": 0,
+  "high_findings": 0,
+  "medium_findings": 0,
+  "agents_consensus": "divergent_views",
+  "execution_time": 0.00019884109497070312,
+  "agent_summaries": {
+    "security": "Security analysis: No issues found.",
+    "performance": "Performance analysis: Found 1 issues (1 low)",
+    "architecture": "Architecture analysis: Found 1 issues (1 low)"
+  },
+  "priority_issues": [
+    {
+      "priority": 1,
+      "severity": "low",
+      "agent": "performance",
+      "type": "other",
+      "file": "README.md",
+      "line": 27,
+      "description": "Potential inefficiency in the added section for 'First Test'.",
+      "recommendation": "Consider removing or optimizing the added section for better clarity and focus.",
+      "action": "Consider addressing in future PR",
+      "confidence": 0.7
+    },
+    {
+      "priority": 2,
+      "severity": "low",
+      "agent": "architecture",
+      "type": "naming_issue",
+      "file": "README.md",
+      "line": 12,
+      "description": "The section title 'First Test' is too generic and lacks context.",
+      "recommendation": "Provide a more descriptive title that clearly conveys the purpose of the test.",
+      "action": "Consider addressing in future PR",
+      "confidence": 0.7
+    }
+  ]
+}
