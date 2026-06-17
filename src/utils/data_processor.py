@@ -16,21 +16,47 @@ class DataProcessor:
         """
         Process list of items
         
-        PERFORMANCE ISSUE: O(n²) complexity
+        Fixed: Using dictionary for O(n) complexity
         """
         processed = []
         
-        # PERFORMANCE ISSUE: Nested loops creating O(n²) complexity
+        # FIXED: Using dictionary to count duplicates in O(n) time
+        id_counts = {}
         for item in items:
-            duplicates = []
-            for other_item in items:
-                if item['id'] == other_item['id']:
-                    duplicates.append(other_item)
-            
-            item['duplicate_count'] = len(duplicates)
+            item_id = item['id']
+            id_counts[item_id] = id_counts.get(item_id, 0) + 1
+        
+        for item in items:
+            item['duplicate_count'] = id_counts[item['id']]
             processed.append(item)
         
         return processed
+    
+    def cache_heavy_computation(self, data: List[dict]) -> dict:
+        """
+        Cache results of heavy computation
+        
+        NEW METHOD: Added caching for expensive operations
+        """
+        # PERFORMANCE ISSUE: Memory leak - cache never cleared
+        if not hasattr(self, '_cache'):
+            self._cache = {}
+        
+        cache_key = str(data)
+        
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+        
+        # Expensive computation
+        result = {
+            'processed_count': len(data),
+            'total_value': sum(item.get('value', 0) for item in data)
+        }
+        
+        # ISSUE: Cache grows unbounded, potential memory leak
+        self._cache[cache_key] = result
+        
+        return result
     
     def transform_data(self, data: Any, format: str) -> str:
         """
