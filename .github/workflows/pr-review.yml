@@ -57,7 +57,6 @@ jobs:
             --compare \
             --single-model anthropic/claude-sonnet-4-6
         working-directory: review-system
-        continue-on-error: true
       
       # Step 6: Check if results exist
       - name: Check Review Results
@@ -68,7 +67,8 @@ jobs:
             echo "✓ Review results generated"
           else
             echo "results_exist=false" >> $GITHUB_OUTPUT
-            echo "✗ No review results found"
+            echo "❌ Review failed - no results generated"
+            exit 1
           fi
       
       # Step 7: Post review comment on PR
