@@ -52,7 +52,8 @@ jobs:
           python .github/scripts/run_review.py \
             --repo ${{ github.repository }} \
             --pr ${{ github.event.pull_request.number }} \
-            --output review_results.json
+            --output review_results.json \
+            --compare
         working-directory: review-system
         continue-on-error: true
       
