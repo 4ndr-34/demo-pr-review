@@ -1,0 +1,80 @@
+{
+  "comparison_mode": true,
+  "pr_number": 3,
+  "pr_title": "Security: Fix SQL injection in search_users",
+  "quality_score": 65.0,
+  "quality_grade": "D",
+  "risk_level": "high",
+  "recommendation": "Request changes before merge",
+  "confidence": 0.94,
+  "total_findings": 3,
+  "critical_findings": 0,
+  "high_findings": 3,
+  "medium_findings": 0,
+  "agents_consensus": "full_agreement",
+  "execution_time": 4.095843076705933,
+  "agent_summaries": {
+    "security": "Security analysis: Found 1 issues (1 high)",
+    "performance": "Performance analysis: Found 1 issues (1 high)",
+    "architecture": "Architecture analysis: Found 1 issues (1 high)"
+  },
+  "priority_issues": [
+    {
+      "priority": 1,
+      "severity": "high",
+      "agent": "security",
+      "type": "sql_injection",
+      "file": "src/api/users.py",
+      "line": 59,
+      "description": "The code is vulnerable to SQL Injection due to improper parameterization of the query in the search_users function.",
+      "recommendation": "Use parameterized queries to prevent SQL Injection attacks. Replace the query construction with placeholders and pass the user input as parameters.",
+      "action": "Should fix before merge",
+      "confidence": 1.0
+    },
+    {
+      "priority": 2,
+      "severity": "high",
+      "agent": "performance",
+      "type": "database_issue",
+      "file": "src/api/users.py",
+      "line": 59,
+      "description": "Potential SQL injection vulnerability fixed, but inefficient query parameterization used",
+      "recommendation": "Use parameterized queries with placeholders to prevent SQL injection and improve query performance",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 3,
+      "severity": "high",
+      "agent": "architecture",
+      "type": "solid_violation",
+      "file": "src/api/users.py",
+      "line": 59,
+      "description": "The search_users method is violating the Single Responsibility Principle by mixing search logic with SQL parameterization concerns.",
+      "recommendation": "Extract SQL parameterization into a separate method/class to separate concerns.",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    }
+  ],
+  "comparison": {
+    "single_agent": {
+      "quality_score": 24.5,
+      "quality_grade": "F",
+      "findings_count": 15,
+      "risk_level": "high",
+      "execution_time": 57.43189072608948
+    },
+    "multi_agent": {
+      "quality_score": 65.0,
+      "quality_grade": "D",
+      "findings_count": 3,
+      "risk_level": "high",
+      "execution_time": 4.095843076705933
+    },
+    "advantage": {
+      "more_findings": -12,
+      "quality_difference": 40.5,
+      "time_overhead": -53.336047649383545
+    }
+  }
+}
