@@ -27,3 +27,8 @@ All review results are automatically saved to the `data-collection` branch for t
 - Add performance optimization → Verify detection
 - Refactor architecture → Check pattern recognition
 - Submit clean code → Confirm positive feedback
+
+## First Test
+
+Testing automated PR review with data collection.
+
