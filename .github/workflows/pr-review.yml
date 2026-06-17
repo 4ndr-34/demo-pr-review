@@ -55,7 +55,7 @@ jobs:
             --pr ${{ github.event.pull_request.number }} \
             --output review_results.json \
             --compare \
-            --single-model anthropic/claude-sonnet-4-20250514
+            --single-model anthropic/claude-sonnet-4-6
         working-directory: review-system
         continue-on-error: true
       
