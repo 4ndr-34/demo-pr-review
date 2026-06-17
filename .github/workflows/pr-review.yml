@@ -47,13 +47,15 @@ jobs:
         id: review
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python .github/scripts/run_review.py \
             --repo ${{ github.repository }} \
             --pr ${{ github.event.pull_request.number }} \
             --output review_results.json \
-            --compare
+            --compare \
+            --single-model claude-3-5-sonnet-20241022
         working-directory: review-system
         continue-on-error: true
       
