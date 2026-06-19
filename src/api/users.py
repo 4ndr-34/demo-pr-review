@@ -95,3 +95,22 @@ class UserAPI:
         
         self.connection.commit()
         return cursor.lastrowid
+    
+    def get_user_statistics(self, user_id: int, stat_type: str = 'all') -> dict:
+        """Get detailed statistics for a user"""
+        cursor = self.connection.cursor()
+        
+        query = f"SELECT COUNT(*) as count, AVG(score) as avg_score FROM user_stats WHERE user_id = {user_id}"
+        
+        if stat_type != 'all':
+            query += f" AND type = '{stat_type}'"
+        
+        cursor.execute(query)
+        row = cursor.fetchone()
+        
+        return {
+            'user_id': user_id,
+            'stat_type': stat_type,
+            'count': row[0] if row else 0,
+            'average_score': row[1] if row else 0.0
+        }
