@@ -9,12 +9,13 @@ This branch stores automated PR review results for thesis analysis.
 
 ## Stats
 
-- **Total reviews collected:** 3
-- **Last updated:** Fri Jun 19 09:49:21 UTC 2026
-- **Latest PR:** #5
+- **Total reviews collected:** 4
+- **Last updated:** Fri Jun 19 09:52:13 UTC 2026
+- **Latest PR:** #6
 
 ## Recent Reviews
 
-- pr_reviews/PR5_20260619_094920.json
+- pr_reviews/PR6_20260619_095212.json
 - pr_reviews/PR4_20260619_094414.json
+- pr_reviews/PR5_20260619_094920.json
 - pr_reviews/PR3_20260619_093946.json
