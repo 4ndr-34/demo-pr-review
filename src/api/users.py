@@ -10,11 +10,29 @@ import sqlite3
 from typing import List, Optional
 
 
+class ConnectionPool:
+    """Simple connection pool for database"""
+    def __init__(self, db_path: str, pool_size: int = 5):
+        self.db_path = db_path
+        self.pool = [sqlite3.connect(db_path) for _ in range(pool_size)]
+        self.available = list(self.pool)
+    
+    def get_connection(self):
+        if self.available:
+            return self.available.pop()
+        return sqlite3.connect(self.db_path)
+    
+    def return_connection(self, conn):
+        if len(self.available) < len(self.pool):
+            self.available.append(conn)
+
+
 class UserAPI:
-    """User API with intentional security and performance issues"""
+    """User API with connection pooling"""
     
     def __init__(self, db_path: str):
-        self.connection = sqlite3.connect(db_path)
+        self.pool = ConnectionPool(db_path)
+        self.connection = self.pool.get_connection()
     
     def get_user_by_id(self, user_id: int) -> Optional[dict]:
         """
