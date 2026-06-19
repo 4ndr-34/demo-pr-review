@@ -52,37 +52,20 @@ class DataProcessor:
         else:
             return str(data)
     
+    def _extract_values(self, data: List[dict]) -> List[float]:
+        """Extract values from data items"""
+        return [item.get('value', 0) for item in data]
+    
     def calculate_metrics(self, data: List[dict]) -> dict:
-        """
-        Calculate metrics from data
+        """Calculate metrics without code duplication"""
+        if not data:
+            return {'total': 0, 'average': 0, 'max': 0, 'min': 0}
         
-        ARCHITECTURE ISSUE: Code duplication
-        """
-        total = 0
-        # ARCHITECTURE ISSUE: Code duplication
-        for item in data:
-            total += item.get('value', 0)
-        
-        average = 0
-        for item in data:
-            average += item.get('value', 0)
-        average = average / len(data) if data else 0
-        
-        maximum = 0
-        for item in data:
-            val = item.get('value', 0)
-            if val > maximum:
-                maximum = val
-        
-        minimum = float('inf')
-        for item in data:
-            val = item.get('value', 0)
-            if val < minimum:
-                minimum = val
+        values = self._extract_values(data)
         
         return {
-            'total': total,
-            'average': average,
-            'max': maximum,
-            'min': minimum if minimum != float('inf') else 0
+            'total': sum(values),
+            'average': sum(values) / len(values),
+            'max': max(values),
+            'min': min(values)
         }
