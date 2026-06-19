@@ -10,11 +10,30 @@ import sqlite3
 from typing import List, Optional
 
 
-class UserAPI:
-    """User API with intentional security and performance issues"""
+class DatabaseConnection:
+    """Abstraction for database connection"""
+    def __init__(self, connection):
+        self.connection = connection
     
-    def __init__(self, db_path: str):
-        self.connection = sqlite3.connect(db_path)
+    def execute(self, query: str, params=None):
+        cursor = self.connection.cursor()
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        return cursor
+
+
+class UserAPI:
+    """User API with dependency injection"""
+    
+    def __init__(self, db_connection: DatabaseConnection = None):
+        if db_connection is None:
+            import sqlite3
+            conn = sqlite3.connect('default.db')
+            db_connection = DatabaseConnection(conn)
+        self.db = db_connection
+        self.connection = db_connection.connection
     
     def get_user_by_id(self, user_id: int) -> Optional[dict]:
         """
