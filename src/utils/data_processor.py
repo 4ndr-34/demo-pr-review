@@ -12,6 +12,15 @@ import json
 class DataProcessor:
     """Data processor with intentional issues"""
     
+    def __init__(self):
+        self._formatters = {
+            'json': lambda d: json.dumps(d),
+            'csv': lambda d: "csv_data",
+            'xml': lambda d: "<data></data>",
+            'yaml': lambda d: "yaml_data",
+            'text': lambda d: str(d)
+        }
+    
     def process_items(self, items: List[dict]) -> List[dict]:
         """
         Process list of items
@@ -33,24 +42,9 @@ class DataProcessor:
         return processed
     
     def transform_data(self, data: Any, format: str) -> str:
-        """
-        Transform data to different formats
-        
-        ARCHITECTURE ISSUE: Large if-else chain (should use Strategy pattern)
-        """
-        # ARCHITECTURE ISSUE: Long if-else chain
-        if format == 'json':
-            return json.dumps(data)
-        elif format == 'csv':
-            return "csv_data"
-        elif format == 'xml':
-            return "<data></data>"
-        elif format == 'yaml':
-            return "yaml_data"
-        elif format == 'text':
-            return str(data)
-        else:
-            return str(data)
+        """Transform data using Strategy pattern"""
+        formatter = self._formatters.get(format, str)
+        return formatter(data)
     
     def calculate_metrics(self, data: List[dict]) -> dict:
         """
