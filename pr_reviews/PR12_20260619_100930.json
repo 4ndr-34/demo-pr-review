@@ -1,0 +1,215 @@
+{
+  "comparison_mode": true,
+  "pr_number": 12,
+  "pr_title": "Architecture: Extract business logic to service layer",
+  "quality_score": 74.5,
+  "quality_grade": "C",
+  "risk_level": "medium",
+  "recommendation": "Approve with minor comments",
+  "confidence": 0.82,
+  "total_findings": 7,
+  "critical_findings": 0,
+  "high_findings": 1,
+  "medium_findings": 5,
+  "agents_consensus": "divergent_views",
+  "execution_time": 5.487735271453857,
+  "agent_summaries": {
+    "security": "Security analysis: Found 1 issues (1 medium)",
+    "performance": "Performance analysis: Found 3 issues (3 medium)",
+    "architecture": "Architecture analysis: Found 3 issues (1 high, 1 medium, 1 low)"
+  },
+  "priority_issues": [
+    {
+      "priority": 1,
+      "severity": "high",
+      "agent": "architecture",
+      "type": "solid_violation",
+      "file": "src/models/user.py",
+      "line": 24,
+      "description": "The User class violates the Single Responsibility Principle by handling multiple responsibilities such as password validation, email sending, logging, and reputation calculation.",
+      "recommendation": "Refactor the User class to delegate these responsibilities to a UserService or other appropriate classes following the Single Responsibility Principle.",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 2,
+      "severity": "medium",
+      "agent": "security",
+      "type": "other",
+      "file": "src/models/user.py",
+      "line": 9,
+      "description": "Sensitive operations like sending emails and logging should not be directly handled in the service layer. This violates the single responsibility principle and could lead to maintainability issues.",
+      "recommendation": "Move the email sending and logging operations to separate modules or classes dedicated to handling these concerns.",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.9
+    },
+    {
+      "priority": 3,
+      "severity": "medium",
+      "agent": "performance",
+      "type": "inefficient_algorithm",
+      "file": "src/models/user.py",
+      "line": 14,
+      "description": "Calculating user reputation score with linear complexity",
+      "recommendation": "Optimize reputation calculation to achieve constant time complexity",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.8
+    },
+    {
+      "priority": 4,
+      "severity": "medium",
+      "agent": "performance",
+      "type": "inefficient_algorithm",
+      "file": "src/models/user.py",
+      "line": 20,
+      "description": "Calculating user reputation score with linear complexity",
+      "recommendation": "Optimize reputation calculation to achieve constant time complexity",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.7
+    },
+    {
+      "priority": 5,
+      "severity": "medium",
+      "agent": "performance",
+      "type": "inefficient_algorithm",
+      "file": "src/models/user.py",
+      "line": 8,
+      "description": "Weak password strength validation",
+      "recommendation": "Improve password strength validation algorithm",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.7
+    },
+    {
+      "priority": 6,
+      "severity": "medium",
+      "agent": "architecture",
+      "type": "code_smell",
+      "file": "src/models/user.py",
+      "line": 24,
+      "description": "The User class contains a long method exceeding 50 lines.",
+      "recommendation": "Extract the long method into smaller, more focused methods to improve readability and maintainability.",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.8
+    },
+    {
+      "priority": 7,
+      "severity": "low",
+      "agent": "architecture",
+      "type": "naming_issue",
+      "file": "src/models/user.py",
+      "line": 24,
+      "description": "The UserService class lacks a clear and descriptive name.",
+      "recommendation": "Consider renaming UserService to a more descriptive name that reflects its purpose in the application.",
+      "action": "Consider addressing in future PR",
+      "confidence": 0.7
+    }
+  ],
+  "all_findings": [
+    {
+      "priority": 1,
+      "severity": "high",
+      "agent": "architecture",
+      "type": "solid_violation",
+      "file": "src/models/user.py",
+      "line": 24,
+      "description": "The User class violates the Single Responsibility Principle by handling multiple responsibilities such as password validation, email sending, logging, and reputation calculation.",
+      "recommendation": "Refactor the User class to delegate these responsibilities to a UserService or other appropriate classes following the Single Responsibility Principle.",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 2,
+      "severity": "medium",
+      "agent": "security",
+      "type": "other",
+      "file": "src/models/user.py",
+      "line": 9,
+      "description": "Sensitive operations like sending emails and logging should not be directly handled in the service layer. This violates the single responsibility principle and could lead to maintainability issues.",
+      "recommendation": "Move the email sending and logging operations to separate modules or classes dedicated to handling these concerns.",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.9
+    },
+    {
+      "priority": 3,
+      "severity": "medium",
+      "agent": "performance",
+      "type": "inefficient_algorithm",
+      "file": "src/models/user.py",
+      "line": 14,
+      "description": "Calculating user reputation score with linear complexity",
+      "recommendation": "Optimize reputation calculation to achieve constant time complexity",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.8
+    },
+    {
+      "priority": 4,
+      "severity": "medium",
+      "agent": "performance",
+      "type": "inefficient_algorithm",
+      "file": "src/models/user.py",
+      "line": 20,
+      "description": "Calculating user reputation score with linear complexity",
+      "recommendation": "Optimize reputation calculation to achieve constant time complexity",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.7
+    },
+    {
+      "priority": 5,
+      "severity": "medium",
+      "agent": "performance",
+      "type": "inefficient_algorithm",
+      "file": "src/models/user.py",
+      "line": 8,
+      "description": "Weak password strength validation",
+      "recommendation": "Improve password strength validation algorithm",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.7
+    },
+    {
+      "priority": 6,
+      "severity": "medium",
+      "agent": "architecture",
+      "type": "code_smell",
+      "file": "src/models/user.py",
+      "line": 24,
+      "description": "The User class contains a long method exceeding 50 lines.",
+      "recommendation": "Extract the long method into smaller, more focused methods to improve readability and maintainability.",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.8
+    },
+    {
+      "priority": 7,
+      "severity": "low",
+      "agent": "architecture",
+      "type": "naming_issue",
+      "file": "src/models/user.py",
+      "line": 24,
+      "description": "The UserService class lacks a clear and descriptive name.",
+      "recommendation": "Consider renaming UserService to a more descriptive name that reflects its purpose in the application.",
+      "action": "Consider addressing in future PR",
+      "confidence": 0.7
+    }
+  ],
+  "comparison": {
+    "single_agent": {
+      "quality_score": 100.0,
+      "quality_grade": "A+",
+      "findings_count": 0,
+      "findings": [],
+      "risk_level": "low",
+      "execution_time": 66.67582702636719
+    },
+    "multi_agent": {
+      "quality_score": 74.5,
+      "quality_grade": "C",
+      "findings_count": 7,
+      "risk_level": "medium",
+      "execution_time": 5.487735271453857
+    },
+    "advantage": {
+      "more_findings": 7,
+      "quality_difference": -25.5,
+      "time_overhead": -61.18809175491333
+    }
+  }
+}
