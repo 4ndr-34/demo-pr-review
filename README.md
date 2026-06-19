@@ -1,6 +1,6 @@
 # PR Review Data Collection (v2 - Fair Scoring)
 
-This branch stores automated PR review results using fair scoring formula (no bonuses/penalties).
+This branch stores automated PR review results for thesis analysis.
 
 ## Structure
 
@@ -9,5 +9,10 @@ This branch stores automated PR review results using fair scoring formula (no bo
 
 ## Stats
 
-Total reviews: 0
-Last updated: Fri Jun 19 09:39:46 UTC 2026
+- **Total reviews collected:** 1
+- **Last updated:** Fri Jun 19 09:39:47 UTC 2026
+- **Latest PR:** #3
+
+## Recent Reviews
+
+- pr_reviews/PR3_20260619_093946.json
