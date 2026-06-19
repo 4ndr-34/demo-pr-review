@@ -1,0 +1,330 @@
+{
+  "comparison_mode": true,
+  "pr_number": 17,
+  "pr_title": "Feature: Add user statistics endpoint",
+  "quality_score": 77.0,
+  "quality_grade": "C+",
+  "risk_level": "medium",
+  "recommendation": "Approve with minor comments",
+  "confidence": 0.84,
+  "total_findings": 3,
+  "critical_findings": 0,
+  "high_findings": 2,
+  "medium_findings": 1,
+  "agents_consensus": "majority_agreement",
+  "execution_time": 2.5855610370635986,
+  "agent_summaries": {
+    "security": "Security analysis: Found 1 issues (1 high)",
+    "performance": "Performance analysis: Found 1 issues (1 high)",
+    "architecture": "Architecture analysis: Found 1 issues (1 medium)"
+  },
+  "priority_issues": [
+    {
+      "priority": 1,
+      "severity": "high",
+      "agent": "security",
+      "type": "sql_injection",
+      "file": "src/api/users.py",
+      "line": 10,
+      "description": "The 'get_user_statistics' function is vulnerable to SQL injection due to unsanitized user input directly concatenated into the query.",
+      "recommendation": "Use parameterized queries to prevent SQL injection. Sanitize and validate user inputs before including them in SQL queries.",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 2,
+      "severity": "high",
+      "agent": "performance",
+      "type": "database_issue",
+      "file": "src/api/users.py",
+      "line": 10,
+      "description": "Potential N+1 query issue in get_user_statistics method",
+      "recommendation": "Use a single query with JOIN to fetch all required data in one go",
+      "action": "Should fix before merge",
+      "confidence": 0.8
+    },
+    {
+      "priority": 3,
+      "severity": "medium",
+      "agent": "architecture",
+      "type": "code_smell",
+      "file": "src/api/users.py",
+      "line": 9,
+      "description": "The method get_user_statistics is violating the Single Responsibility Principle by handling both database query construction and result processing.",
+      "recommendation": "Refactor the get_user_statistics method to separate the database query construction logic from result processing into separate methods.",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.8
+    }
+  ],
+  "all_findings": [
+    {
+      "priority": 1,
+      "severity": "high",
+      "agent": "security",
+      "type": "sql_injection",
+      "file": "src/api/users.py",
+      "line": 10,
+      "description": "The 'get_user_statistics' function is vulnerable to SQL injection due to unsanitized user input directly concatenated into the query.",
+      "recommendation": "Use parameterized queries to prevent SQL injection. Sanitize and validate user inputs before including them in SQL queries.",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 2,
+      "severity": "high",
+      "agent": "performance",
+      "type": "database_issue",
+      "file": "src/api/users.py",
+      "line": 10,
+      "description": "Potential N+1 query issue in get_user_statistics method",
+      "recommendation": "Use a single query with JOIN to fetch all required data in one go",
+      "action": "Should fix before merge",
+      "confidence": 0.8
+    },
+    {
+      "priority": 3,
+      "severity": "medium",
+      "agent": "architecture",
+      "type": "code_smell",
+      "file": "src/api/users.py",
+      "line": 9,
+      "description": "The method get_user_statistics is violating the Single Responsibility Principle by handling both database query construction and result processing.",
+      "recommendation": "Refactor the get_user_statistics method to separate the database query construction logic from result processing into separate methods.",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.8
+    }
+  ],
+  "comparison": {
+    "single_agent": {
+      "quality_score": 0.0,
+      "quality_grade": "F",
+      "findings_count": 15,
+      "findings": [
+        {
+          "type": "sql_injection",
+          "severity": "critical",
+          "confidence": 1.0,
+          "file": "src/api/users.py",
+          "line": 100,
+          "description": "The query is constructed using Python f-string interpolation with user-controlled input (`user_id` and `stat_type`). Both values are embedded directly into the SQL string without any sanitisation or parameterisation. An attacker can pass a crafted `stat_type` such as `' OR '1'='1` or a UNION-based payload to read arbitrary data from the database. Even though `user_id` is typed as `int`, Python does not enforce that at runtime, so a caller that passes a string value (e.g. from a web framework's query-string parser) would still be vulnerable.",
+          "recommendation": "Use parameterised queries exclusively. Replace the f-string construction with a placeholder-based approach:\n\n```python\nif stat_type != 'all':\n    query = \"SELECT COUNT(*) as count, AVG(score) as avg_score FROM user_stats WHERE user_id = ? AND type = ?\"\n    cursor.execute(query, (user_id, stat_type))\nelse:\n    query = \"SELECT COUNT(*) as count, AVG(score) as avg_score FROM user_stats WHERE user_id = ?\"\n    cursor.execute(query, (user_id,))\n```\n(Use `%s` instead of `?` for MySQL/PostgreSQL drivers.) Never interpolate values directly into SQL strings.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "security"
+          }
+        },
+        {
+          "type": "sql_injection",
+          "severity": "critical",
+          "confidence": 1.0,
+          "file": "src/api/users.py",
+          "line": 102,
+          "description": "The `stat_type` parameter is appended to the query string inside a second f-string with single-quote delimiters: `AND type = '{stat_type}'`. A value such as `'; DROP TABLE user_stats; --` would terminate the string literal and inject arbitrary SQL. This is a textbook second-order / direct injection vector.",
+          "recommendation": "Same as above: use a parameterised query placeholder for `stat_type`. Never wrap user input in quotes inside a SQL string; the database driver handles quoting correctly when parameters are used.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "security"
+          }
+        },
+        {
+          "type": "missing_input_validation",
+          "severity": "high",
+          "confidence": 0.95,
+          "file": "src/api/users.py",
+          "line": 98,
+          "description": "`user_id` has a type hint of `int` but is never validated at runtime. A caller (e.g., a web framework route handler) may pass a string from a URL parameter. Additionally, there is no check that `user_id` is positive or that the referenced user actually exists, which could allow querying statistics for non-existent users or leaking information about valid ID ranges.",
+          "recommendation": "Validate inputs explicitly before using them:\n```python\nif not isinstance(user_id, int) or user_id <= 0:\n    raise ValueError(f'Invalid user_id: {user_id}')\nALLOWED_STAT_TYPES = {'all', 'score', 'activity'}  # define the full set\nif stat_type not in ALLOWED_STAT_TYPES:\n    raise ValueError(f'Invalid stat_type: {stat_type}')\n```\nUsing an allowlist for `stat_type` also eliminates the injection risk as a defence-in-depth measure.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "missing_authorization_check",
+          "severity": "high",
+          "confidence": 0.9,
+          "file": "src/api/users.py",
+          "line": 98,
+          "description": "The method accepts a `user_id` parameter but performs no authentication or authorisation check. Any caller can request statistics for any arbitrary `user_id`, enabling horizontal privilege escalation (user A reading user B's statistics). There is no check that the requesting principal owns or has permission to view the requested user's data.",
+          "recommendation": "Add an authorisation check before executing the query. The calling layer (route handler or service) should verify that the authenticated user's ID matches `user_id`, or that the caller has an administrative role:\n```python\nif requesting_user_id != user_id and not is_admin(requesting_user_id):\n    raise PermissionError('Access denied')\n```\nAlternatively, enforce this at the API/middleware layer rather than inside the data-access method.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "security"
+          }
+        },
+        {
+          "type": "missing_error_handling",
+          "severity": "high",
+          "confidence": 0.95,
+          "file": "src/api/users.py",
+          "line": 99,
+          "description": "There is no try/except around the database operations. If the database connection is closed, the cursor raises an exception, or the query fails for any reason, the exception will propagate unhandled to the caller. This can expose internal stack traces (and potentially schema details) to end users if the exception is not caught higher up.",
+          "recommendation": "Wrap database operations in a try/except block and raise a domain-specific exception:\n```python\ntry:\n    cursor = self.connection.cursor()\n    cursor.execute(query, params)\n    row = cursor.fetchone()\nexcept Exception as exc:\n    raise DatabaseError('Failed to retrieve user statistics') from exc\nfinally:\n    cursor.close()\n```",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "resource_leak",
+          "severity": "high",
+          "confidence": 0.9,
+          "file": "src/api/users.py",
+          "line": 99,
+          "description": "The cursor is never explicitly closed. If an exception occurs between `cursor = self.connection.cursor()` and the end of the method, or even in the normal path, the cursor object is left open. Depending on the database driver, unclosed cursors can exhaust connection-pool resources or hold locks.",
+          "recommendation": "Use a context manager to ensure the cursor is always closed:\n```python\nwith self.connection.cursor() as cursor:\n    cursor.execute(query, params)\n    row = cursor.fetchone()\n```\nIf the driver does not support context managers on cursors, use a try/finally block.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "security"
+          }
+        },
+        {
+          "type": "none_dereference_risk",
+          "severity": "medium",
+          "confidence": 0.85,
+          "file": "src/api/users.py",
+          "line": 108,
+          "description": "`cursor.fetchone()` can return `None` if no rows match. The code guards against this with `if row else 0`, but `row[1]` (the AVG value) can itself be `None` even when a row is returned \u2014 for example, when the table has matching rows but all `score` values are NULL, `AVG(score)` returns NULL. In that case `row[1]` would be `None`, not a float, and the caller may not expect a `None` value for `average_score`.",
+          "recommendation": "Handle the NULL AVG case explicitly:\n```python\n'average_score': float(row[1]) if row and row[1] is not None else 0.0\n```",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "shared_mutable_connection",
+          "severity": "medium",
+          "confidence": 0.8,
+          "file": "src/api/users.py",
+          "line": 99,
+          "description": "The method uses `self.connection` directly. If this class is used in a multi-threaded or async context (e.g., a web server handling concurrent requests), sharing a single database connection across threads is not safe with most database drivers (e.g., sqlite3 is not thread-safe by default). Concurrent cursor operations on the same connection can corrupt state or raise exceptions.",
+          "recommendation": "Use a connection pool (e.g., `SQLAlchemy`, `psycopg2` pool, or `aiosqlite` for async) and acquire a connection per request rather than sharing one connection across the lifetime of the object. For SQLite specifically, set `check_same_thread=False` only if you have external locking, or better yet switch to a production database.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "missing_pagination",
+          "severity": "medium",
+          "confidence": 0.75,
+          "file": "src/api/users.py",
+          "line": 100,
+          "description": "The query uses `COUNT(*)` and `AVG(score)` which are aggregate functions and will always return a single row, so pagination is not needed for this specific query. However, there is no `LIMIT` clause and no consideration of what happens if `user_stats` grows to millions of rows. The aggregate query itself is fine, but if the schema or query evolves to return multiple rows, this will become a scalability issue. Additionally, there is no index hint or guarantee that `user_id` and `type` are indexed.",
+          "recommendation": "Ensure that `user_stats(user_id, type)` has a composite index to make this query efficient at scale:\n```sql\nCREATE INDEX idx_user_stats_user_type ON user_stats(user_id, type);\n```\nDocument the expected query plan and add this index as part of the migration accompanying this PR.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "inconsistent_return_type",
+          "severity": "medium",
+          "confidence": 0.8,
+          "file": "src/api/users.py",
+          "line": 106,
+          "description": "When `row` is falsy, `count` is returned as the integer `0` and `average_score` as the float `0.0`. When a row is present, `count` is whatever the database returns (typically an integer but driver-dependent) and `average_score` is a `Decimal` or `float` depending on the driver. The return type annotation says `dict` but gives no detail about value types, making this unreliable for callers.",
+          "recommendation": "Normalise the return values to consistent Python types:\n```python\nreturn {\n    'user_id': int(user_id),\n    'stat_type': stat_type,\n    'count': int(row[0]) if row else 0,\n    'average_score': float(row[1]) if row and row[1] is not None else 0.0,\n}\n```\nConsider using a `TypedDict` or dataclass for the return type to make the contract explicit.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "missing_type_annotations",
+          "severity": "low",
+          "confidence": 0.9,
+          "file": "src/api/users.py",
+          "line": 98,
+          "description": "The return type is annotated as `dict` without specifying key/value types. Python's `dict` annotation alone provides no useful type information to callers or static analysis tools.",
+          "recommendation": "Use `TypedDict` or at minimum `Dict[str, Any]` from `typing`. Preferably define a dataclass or `TypedDict`:\n```python\nfrom typing import TypedDict\nclass UserStatistics(TypedDict):\n    user_id: int\n    stat_type: str\n    count: int\n    average_score: float\n\ndef get_user_statistics(self, user_id: int, stat_type: str = 'all') -> UserStatistics:\n```",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "insufficient_documentation",
+          "severity": "low",
+          "confidence": 0.9,
+          "file": "src/api/users.py",
+          "line": 98,
+          "description": "The docstring says only 'Get detailed statistics for a user' with no description of parameters, return values, possible exceptions, or valid values for `stat_type`. This makes the method difficult to use correctly without reading the implementation.",
+          "recommendation": "Write a complete docstring:\n```python\n\"\"\"\nGet aggregate statistics for a user.\n\nArgs:\n    user_id: The ID of the user whose statistics to retrieve. Must be a positive integer.\n    stat_type: The category of statistics to retrieve. Must be one of the values\n               defined in ALLOWED_STAT_TYPES, or 'all' to aggregate across all types.\n\nReturns:\n    A dict with keys:\n        - user_id (int)\n        - stat_type (str)\n        - count (int): number of stat records\n        - average_score (float): mean score, or 0.0 if no records exist\n\nRaises:\n    ValueError: If user_id is not a positive integer or stat_type is not allowed.\n    DatabaseError: If the query fails.\n\"\"\"\n```",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "missing_tests",
+          "severity": "medium",
+          "confidence": 0.95,
+          "file": "src/api/users.py",
+          "line": 0,
+          "description": "No tests are included or referenced in this PR for the new `get_user_statistics` method. Given that the method involves SQL construction and multiple conditional branches, the lack of tests means regressions and the injection vulnerabilities identified above could go undetected.",
+          "recommendation": "Add unit tests covering at minimum:\n1. Normal case: `stat_type='all'` returns correct aggregates.\n2. Normal case: specific `stat_type` filters correctly.\n3. Empty result: returns `{'count': 0, 'average_score': 0.0}`.\n4. NULL average: row exists but `AVG` is NULL.\n5. Invalid `user_id` raises `ValueError`.\n6. Invalid `stat_type` raises `ValueError`.\n7. Database error raises `DatabaseError`.\nUse mocking (`unittest.mock`) to avoid requiring a real database in unit tests.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "single_responsibility_violation",
+          "severity": "low",
+          "confidence": 0.7,
+          "file": "src/api/users.py",
+          "line": 98,
+          "description": "The method builds SQL query strings, executes them, and formats the response all in one place. This mixes query-building logic with data-access logic and response-shaping logic. As the method grows (e.g., supporting more `stat_type` values or additional aggregates), it will become harder to maintain.",
+          "recommendation": "Consider separating concerns: a private `_build_stats_query` method for query construction, the public method for execution and result mapping, and potentially a separate serialisation layer for response formatting. For more complex statistics, a dedicated `UserStatisticsRepository` class may be warranted.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "magic_string",
+          "severity": "low",
+          "confidence": 0.85,
+          "file": "src/api/users.py",
+          "line": 101,
+          "description": "The string `'all'` is used as a sentinel value for `stat_type` without being defined as a named constant. If this value needs to change or is referenced elsewhere, it creates a maintenance burden and risk of typos.",
+          "recommendation": "Define a constant or use an `Enum`:\n```python\nfrom enum import Enum\nclass StatType(str, Enum):\n    ALL = 'all'\n    SCORE = 'score'\n    ACTIVITY = 'activity'\n```\nThis also makes the allowlist explicit and enables IDE autocompletion.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        }
+      ],
+      "risk_level": "critical",
+      "execution_time": 62.650033950805664
+    },
+    "multi_agent": {
+      "quality_score": 77.0,
+      "quality_grade": "C+",
+      "findings_count": 3,
+      "risk_level": "medium",
+      "execution_time": 2.5855610370635986
+    },
+    "advantage": {
+      "more_findings": -12,
+      "quality_difference": 77.0,
+      "time_overhead": -60.064472913742065
+    }
+  }
+}
