@@ -7,6 +7,7 @@ Contains intentional issues for testing.
 """
 
 import sqlite3
+import hashlib
 from typing import List, Optional
 
 
@@ -95,3 +96,22 @@ class UserAPI:
         
         self.connection.commit()
         return cursor.lastrowid
+    
+    def create_users_batch(self, users: List[tuple]) -> int:
+        """Create multiple users efficiently using batch insert"""
+        cursor = self.connection.cursor()
+        
+        hashed_users = []
+        for username, email, password in users:
+            if len(password) < 8:
+                continue
+            password_hash = hashlib.sha256(password.encode()).hexdigest()
+            hashed_users.append((username, email, password_hash))
+        
+        cursor.executemany(
+            "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+            hashed_users
+        )
+        
+        self.connection.commit()
+        return cursor.rowcount
