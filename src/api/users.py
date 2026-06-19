@@ -11,9 +11,29 @@ from typing import List, Optional
 
 
 class UserAPI:
-    """User API with intentional security and performance issues"""
+    """
+    User API for managing user data and operations.
+    
+    This class provides a clean interface for user-related database operations
+    including CRUD operations, search, and profile rendering. All methods use
+    parameterized queries to prevent SQL injection.
+    
+    Attributes:
+        connection: SQLite database connection instance
+    
+    Example:
+        >>> api = UserAPI('users.db')
+        >>> user = api.get_user_by_id(1)
+        >>> print(user['username'])
+    """
     
     def __init__(self, db_path: str):
+        """
+        Initialize UserAPI with database connection.
+        
+        Args:
+            db_path: Path to SQLite database file
+        """
         self.connection = sqlite3.connect(db_path)
     
     def get_user_by_id(self, user_id: int) -> Optional[dict]:
