@@ -80,18 +80,27 @@ class UserAPI:
         return users
     
     def create_user(self, username: str, email: str, password: str) -> int:
-        """
-        Create new user
+        """Create new user with error handling"""
         
-        SECURITY ISSUE: Plain text password storage
-        """
-        cursor = self.connection.cursor()
-        
-        # SECURITY ISSUE: Storing password in plain text
-        cursor.execute(
-            "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-            (username, email, password)  # Plain text password!
-        )
-        
-        self.connection.commit()
-        return cursor.lastrowid
+        try:
+            if not username or len(username) < 3 or len(username) > 50:
+                raise ValueError("Username must be 3-50 characters")
+            
+            if not email or '@' not in email or len(email) > 254:
+                raise ValueError("Invalid email address")
+            
+            if not password or len(password) < 8:
+                raise ValueError("Password must be at least 8 characters")
+            
+            cursor = self.connection.cursor()
+            
+            cursor.execute(
+                "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+                (username, email, password)
+            )
+            
+            self.connection.commit()
+            return cursor.lastrowid
+        except Exception as e:
+            print(f"Error creating user: {e}")
+            return -1
