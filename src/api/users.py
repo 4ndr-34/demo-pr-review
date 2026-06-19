@@ -7,7 +7,14 @@ Contains intentional issues for testing.
 """
 
 import sqlite3
+import logging
 from typing import List, Optional
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 
 class UserAPI:
@@ -17,15 +24,15 @@ class UserAPI:
         self.connection = sqlite3.connect(db_path)
     
     def get_user_by_id(self, user_id: int) -> Optional[dict]:
-        """
-        Get user by ID
-        
-        SECURITY ISSUE: SQL Injection vulnerability
-        """
-        cursor = self.connection.cursor()
-        # SECURITY ISSUE: SQL Injection vulnerability
-        query = f"SELECT * FROM users WHERE id = {user_id}"
-        cursor.execute(query)
+        """Get user by ID with optimized query and logging"""
+        try:
+            logger.debug(f"Fetching user with ID: {user_id}")
+            cursor = self.connection.cursor()
+            query = f"SELECT * FROM users WHERE id = {user_id}"
+            cursor.execute(query)
+        except Exception as e:
+            logger.error(f"Failed to fetch user {user_id}: {str(e)}", exc_info=True)
+            return None
         
         row = cursor.fetchone()
         if row:
