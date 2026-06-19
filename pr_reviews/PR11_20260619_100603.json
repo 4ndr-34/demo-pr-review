@@ -1,0 +1,358 @@
+{
+  "comparison_mode": true,
+  "pr_number": 11,
+  "pr_title": "Architecture: Implement Strategy pattern for data transformation",
+  "quality_score": 84.0,
+  "quality_grade": "B",
+  "risk_level": "medium",
+  "recommendation": "Approve with minor comments",
+  "confidence": 0.87,
+  "total_findings": 3,
+  "critical_findings": 0,
+  "high_findings": 1,
+  "medium_findings": 2,
+  "agents_consensus": "majority_agreement",
+  "execution_time": 6.916162967681885,
+  "agent_summaries": {
+    "security": "Security analysis: Found 1 issues (1 medium)",
+    "performance": "Performance analysis: Found 1 issues (1 medium)",
+    "architecture": "Architecture analysis: Found 1 issues (1 high)"
+  },
+  "priority_issues": [
+    {
+      "priority": 1,
+      "severity": "high",
+      "agent": "architecture",
+      "type": "solid_violation",
+      "file": "src/utils/data_processor.py",
+      "line": 33,
+      "description": "The `transform_data` method violates the Open/Closed Principle by having a long if-else chain for data transformation formats.",
+      "recommendation": "Refactor the `transform_data` method to use the Strategy pattern for data transformation formats.",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 2,
+      "severity": "medium",
+      "agent": "security",
+      "type": "crypto_issue",
+      "file": "src/utils/data_processor.py",
+      "line": 12,
+      "description": "Hardcoded data formatters without proper encryption",
+      "recommendation": "Store sensitive data formatters securely or use encryption to protect them",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.9
+    },
+    {
+      "priority": 3,
+      "severity": "medium",
+      "agent": "performance",
+      "type": "inefficient_algorithm",
+      "file": "src/utils/data_processor.py",
+      "line": 15,
+      "description": "The transform_data method uses a long if-else chain for formatting data, which can lead to maintenance issues and is not scalable.",
+      "recommendation": "Refactor the formatting logic using the Strategy pattern to improve maintainability and extensibility.",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.8
+    }
+  ],
+  "all_findings": [
+    {
+      "priority": 1,
+      "severity": "high",
+      "agent": "architecture",
+      "type": "solid_violation",
+      "file": "src/utils/data_processor.py",
+      "line": 33,
+      "description": "The `transform_data` method violates the Open/Closed Principle by having a long if-else chain for data transformation formats.",
+      "recommendation": "Refactor the `transform_data` method to use the Strategy pattern for data transformation formats.",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 2,
+      "severity": "medium",
+      "agent": "security",
+      "type": "crypto_issue",
+      "file": "src/utils/data_processor.py",
+      "line": 12,
+      "description": "Hardcoded data formatters without proper encryption",
+      "recommendation": "Store sensitive data formatters securely or use encryption to protect them",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.9
+    },
+    {
+      "priority": 3,
+      "severity": "medium",
+      "agent": "performance",
+      "type": "inefficient_algorithm",
+      "file": "src/utils/data_processor.py",
+      "line": 15,
+      "description": "The transform_data method uses a long if-else chain for formatting data, which can lead to maintenance issues and is not scalable.",
+      "recommendation": "Refactor the formatting logic using the Strategy pattern to improve maintainability and extensibility.",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.8
+    }
+  ],
+  "comparison": {
+    "single_agent": {
+      "quality_score": 23.5,
+      "quality_grade": "F",
+      "findings_count": 17,
+      "findings": [
+        {
+          "type": "stub_implementation",
+          "severity": "high",
+          "confidence": 0.95,
+          "file": "src/utils/data_processor.py",
+          "line": 17,
+          "description": "The CSV formatter is a stub that always returns the hardcoded string 'csv_data' regardless of the input data. This is not a real implementation and will silently produce incorrect output in production.",
+          "recommendation": "Implement a real CSV serializer, e.g., using Python's built-in `csv` module with `io.StringIO` as the buffer: `import csv, io; buf = io.StringIO(); writer = csv.DictWriter(buf, fieldnames=d[0].keys()); writer.writeheader(); writer.writerows(d); return buf.getvalue()`. Add proper type checking and handle edge cases (empty data, non-dict items).",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "stub_implementation",
+          "severity": "high",
+          "confidence": 0.95,
+          "file": "src/utils/data_processor.py",
+          "line": 18,
+          "description": "The XML formatter always returns the hardcoded string '<data></data>' regardless of the input data. This is a non-functional stub that will silently discard all data passed to it.",
+          "recommendation": "Implement a real XML serializer using `xml.etree.ElementTree` or `lxml`. Ensure proper XML escaping of user-supplied values to prevent XML injection.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "stub_implementation",
+          "severity": "high",
+          "confidence": 0.95,
+          "file": "src/utils/data_processor.py",
+          "line": 19,
+          "description": "The YAML formatter always returns the hardcoded string 'yaml_data' regardless of the input data. This is a non-functional stub.",
+          "recommendation": "Implement a real YAML serializer using `PyYAML` (`yaml.dump(d)`) or `ruamel.yaml`. Be aware of security implications if the output will ever be deserialized with `yaml.load` (use `yaml.safe_dump` / `yaml.safe_load` instead).",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "silent_fallback_on_unknown_format",
+          "severity": "medium",
+          "confidence": 0.92,
+          "file": "src/utils/data_processor.py",
+          "line": 23,
+          "description": "When an unrecognised format string is passed to `transform_data`, the code silently falls back to `str(data)` via the default argument of `dict.get`. This masks programming errors and could expose raw Python object representations to callers who expect a specific serialisation format.",
+          "recommendation": "Raise a `ValueError` (or a custom exception) for unknown formats: `formatter = self._formatters.get(format); if formatter is None: raise ValueError(f'Unsupported format: {format!r}')`. This makes contract violations explicit and aids debugging.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "injection_risk_xml",
+          "severity": "high",
+          "confidence": 0.85,
+          "file": "src/utils/data_processor.py",
+          "line": 18,
+          "description": "Once the XML stub is replaced with a real implementation, there is a risk of XML injection if user-controlled data is interpolated into the XML output without proper escaping. The current stub masks this risk.",
+          "recommendation": "Always use a proper XML library (e.g., `xml.etree.ElementTree`) that handles escaping automatically. Never build XML via string concatenation.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "security"
+          }
+        },
+        {
+          "type": "injection_risk_csv",
+          "severity": "medium",
+          "confidence": 0.8,
+          "file": "src/utils/data_processor.py",
+          "line": 17,
+          "description": "Once the CSV stub is replaced with a real implementation, there is a risk of CSV injection (formula injection) if user-controlled data starting with '=', '+', '-', or '@' is written into cells without sanitisation. Spreadsheet applications may execute such values as formulas.",
+          "recommendation": "Sanitise cell values before writing by prefixing dangerous leading characters with a single-quote, or use a library that handles this automatically. Document the risk in the method docstring.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "security"
+          }
+        },
+        {
+          "type": "strategy_pattern_incomplete",
+          "severity": "medium",
+          "confidence": 0.9,
+          "file": "src/utils/data_processor.py",
+          "line": 13,
+          "description": "The PR claims to implement the Strategy pattern, but the implementation uses plain lambdas stored in a dict rather than proper Strategy objects. While this is acceptable for trivial cases, it does not provide the extensibility benefits of the Strategy pattern (e.g., adding a new format requires modifying the `DataProcessor` class, violating the Open/Closed Principle).",
+          "recommendation": "Define a `FormatterStrategy` base class (or `Protocol`) with a `format(data) -> str` method, and register concrete strategy instances. This allows new formats to be added without modifying `DataProcessor` and makes strategies individually testable and injectable.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "architecture"
+          }
+        },
+        {
+          "type": "solid_violation_open_closed",
+          "severity": "medium",
+          "confidence": 0.88,
+          "file": "src/utils/data_processor.py",
+          "line": 13,
+          "description": "Adding a new output format still requires modifying the `DataProcessor.__init__` method, violating the Open/Closed Principle. The class is not open for extension without modification.",
+          "recommendation": "Expose a `register_formatter(name: str, strategy: FormatterStrategy)` method so that new formats can be registered externally without altering the class internals. Consider using a class-level registry or a factory.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "architecture"
+          }
+        },
+        {
+          "type": "solid_violation_single_responsibility",
+          "severity": "low",
+          "confidence": 0.75,
+          "file": "src/utils/data_processor.py",
+          "line": 12,
+          "description": "`DataProcessor` handles both item processing (`process_items`) and multi-format serialisation (`transform_data`) as well as metrics calculation (`calculate_metrics`). These are distinct responsibilities that could change independently.",
+          "recommendation": "Consider separating serialisation concerns into a dedicated `DataFormatter` class and metrics into a `MetricsCalculator` class, keeping `DataProcessor` focused on orchestration.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "architecture"
+          }
+        },
+        {
+          "type": "missing_input_validation",
+          "severity": "medium",
+          "confidence": 0.85,
+          "file": "src/utils/data_processor.py",
+          "line": 22,
+          "description": "The `format` parameter of `transform_data` is not validated before use. A `None` value or a non-string type will not match any key in `_formatters` and will silently fall back to `str(data)`, making bugs hard to detect.",
+          "recommendation": "Add a type guard at the top of `transform_data`: `if not isinstance(format, str): raise TypeError(f'format must be a str, got {type(format).__name__}')`. Also consider normalising the value with `.lower().strip()` to handle case variations.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "shadowing_builtin",
+          "severity": "low",
+          "confidence": 0.97,
+          "file": "src/utils/data_processor.py",
+          "line": 22,
+          "description": "The parameter name `format` shadows the Python built-in `format()` function. While not a runtime error here, it is a code-quality issue that can cause subtle bugs if the built-in is needed within the method scope and confuses static analysis tools.",
+          "recommendation": "Rename the parameter to `output_format` or `fmt` to avoid shadowing the built-in.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "thread_safety",
+          "severity": "medium",
+          "confidence": 0.7,
+          "file": "src/utils/data_processor.py",
+          "line": 13,
+          "description": "If a `register_formatter` method is added in the future, concurrent modification of `self._formatters` (a plain dict) from multiple threads without locking could cause race conditions or data corruption.",
+          "recommendation": "Use `threading.Lock` to protect mutations to `_formatters`, or use an immutable mapping after initialisation and require a new instance for different configurations.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "missing_docstring",
+          "severity": "low",
+          "confidence": 0.95,
+          "file": "src/utils/data_processor.py",
+          "line": 14,
+          "description": "The `__init__` method has no docstring explaining the purpose of `_formatters`, the supported formats, or how to extend the registry. The docstring for `transform_data` was significantly shortened and no longer documents parameters, return type, or exceptions.",
+          "recommendation": "Add a docstring to `__init__` describing the formatter registry. Restore parameter/return/raises documentation to `transform_data`, e.g., using Google-style or NumPy-style docstrings.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "missing_type_annotation",
+          "severity": "low",
+          "confidence": 0.9,
+          "file": "src/utils/data_processor.py",
+          "line": 13,
+          "description": "`_formatters` has no type annotation, making it harder for static analysis tools (mypy, pyright) to catch type errors. The lambda signatures are also untyped.",
+          "recommendation": "Annotate `_formatters` as `Dict[str, Callable[[Any], str]]` (or the appropriate `Protocol` type once strategies are formalised).",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "missing_tests",
+          "severity": "medium",
+          "confidence": 0.88,
+          "file": "src/utils/data_processor.py",
+          "line": 0,
+          "description": "The PR introduces a behavioural change (dict-based dispatch instead of if-else) and three stub formatters with no observable output, but there is no evidence of unit tests covering: (1) each supported format produces correct output, (2) unknown formats raise an error or return a defined fallback, (3) edge cases such as None data, empty collections, or non-serialisable objects.",
+          "recommendation": "Add a test module `tests/test_data_processor.py` with parameterised tests for each format, an unknown-format test, and edge-case tests. Use `pytest.mark.parametrize` to keep tests concise.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "json_serialization_unhandled_exception",
+          "severity": "medium",
+          "confidence": 0.85,
+          "file": "src/utils/data_processor.py",
+          "line": 16,
+          "description": "The JSON formatter `lambda d: json.dumps(d)` will raise `TypeError` for non-JSON-serialisable objects (e.g., `datetime`, custom classes, `bytes`). This exception propagates uncaught to the caller with no contextual information.",
+          "recommendation": "Wrap the JSON formatter in a try/except or provide a `default` serialiser argument to `json.dumps`, e.g., `json.dumps(d, default=str)`. Document the behaviour clearly so callers understand the contract.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "lambda_complexity",
+          "severity": "low",
+          "confidence": 0.8,
+          "file": "src/utils/data_processor.py",
+          "line": 16,
+          "description": "Using lambdas for formatter implementations stored in a dict makes it difficult to add error handling, logging, or configuration per formatter without refactoring. Lambdas also produce unhelpful names in tracebacks (`<lambda>`).",
+          "recommendation": "Replace lambdas with named functions or callable classes. This improves debuggability and makes each formatter independently testable.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        }
+      ],
+      "risk_level": "high",
+      "execution_time": 47.612560987472534
+    },
+    "multi_agent": {
+      "quality_score": 84.0,
+      "quality_grade": "B",
+      "findings_count": 3,
+      "risk_level": "medium",
+      "execution_time": 6.916162967681885
+    },
+    "advantage": {
+      "more_findings": -14,
+      "quality_difference": 60.5,
+      "time_overhead": -40.69639801979065
+    }
+  }
+}
