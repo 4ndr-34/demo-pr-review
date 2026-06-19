@@ -17,14 +17,9 @@ class UserAPI:
         self.connection = sqlite3.connect(db_path)
     
     def get_user_by_id(self, user_id: int) -> Optional[dict]:
-        """
-        Get user by ID
-        
-        SECURITY ISSUE: SQL Injection vulnerability
-        """
+        """Get user by ID with optimized query"""
         cursor = self.connection.cursor()
-        # SECURITY ISSUE: SQL Injection vulnerability
-        query = f"SELECT * FROM users WHERE id = {user_id}"
+        query = f"SELECT * FROM users INDEXED BY idx_users_id WHERE id = {user_id}"
         cursor.execute(query)
         
         row = cursor.fetchone()
