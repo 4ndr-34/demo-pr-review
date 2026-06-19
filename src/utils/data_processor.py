@@ -7,6 +7,7 @@ Contains intentional performance and architecture issues.
 
 from typing import List, Any
 import json
+from functools import lru_cache
 
 
 class DataProcessor:
@@ -86,3 +87,17 @@ class DataProcessor:
             'max': maximum,
             'min': minimum if minimum != float('inf') else 0
         }
+    
+    @lru_cache(maxsize=128)
+    def _compute_metrics(self, data_tuple):
+        """Internal cached computation with size limit"""
+        data = list(data_tuple)
+        return {
+            'processed_count': len(data),
+            'total_value': sum(item.get('value', 0) for item in data)
+        }
+    
+    def cache_heavy_computation(self, data: List[dict]) -> dict:
+        """Cache results with LRU eviction policy"""
+        data_tuple = tuple((d['id'], d.get('value', 0)) for d in data)
+        return self._compute_metrics(data_tuple)
