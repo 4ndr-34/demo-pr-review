@@ -9,6 +9,31 @@ from datetime import datetime
 from typing import Optional
 
 
+class UserService:
+    """Service layer for user business logic"""
+    
+    @staticmethod
+    def validate_password_strength(password: str) -> bool:
+        """Validate password meets security requirements"""
+        return len(password) >= 8
+    
+    @staticmethod
+    def calculate_reputation(created_at: datetime) -> int:
+        """Calculate user reputation score"""
+        days_active = (datetime.now() - created_at).days
+        return days_active * 10
+    
+    @staticmethod
+    def send_welcome_email(email: str):
+        """Send welcome email to new user"""
+        print(f"Sending welcome email to {email}")
+    
+    @staticmethod
+    def log_user_activity(username: str, action: str):
+        """Log user activity"""
+        print(f"User {username} performed: {action} at {datetime.now()}")
+
+
 class User:
     """
     User model
@@ -24,41 +49,20 @@ class User:
         self.created_at = datetime.now()
     
     def validate_password(self, password: str) -> bool:
-        """
-        Validate password strength
-        
-        SECURITY ISSUE: Weak password validation
-        """
-        # SECURITY ISSUE: Very weak password validation
-        return len(password) >= 6  # Should be much stronger!
+        """Validate password using service layer"""
+        return UserService.validate_password_strength(password)
     
     def send_welcome_email(self):
-        """
-        Send welcome email
-        
-        ARCHITECTURE ISSUE: Model should not handle email sending
-        """
-        # ARCHITECTURE ISSUE: Business logic in model
-        print(f"Sending welcome email to {self.email}")
+        """Delegate to service layer"""
+        UserService.send_welcome_email(self.email)
     
     def log_login(self):
-        """
-        Log user login
-        
-        ARCHITECTURE ISSUE: Model handling logging
-        """
-        # ARCHITECTURE ISSUE: Model should not handle logging
-        print(f"User {self.username} logged in at {datetime.now()}")
+        """Delegate to service layer"""
+        UserService.log_user_activity(self.username, 'login')
     
     def calculate_reputation(self) -> int:
-        """
-        Calculate user reputation
-        
-        ARCHITECTURE ISSUE: Complex business logic in model
-        """
-        # ARCHITECTURE ISSUE: Business logic should be in service layer
-        days_since_creation = (datetime.now() - self.created_at).days
-        return days_since_creation * 10
+        """Delegate to service layer"""
+        return UserService.calculate_reputation(self.created_at)
     
     def to_dict(self) -> dict:
         """Convert user to dictionary"""
