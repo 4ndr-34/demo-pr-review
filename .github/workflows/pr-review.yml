@@ -157,7 +157,7 @@ jobs:
               body: comment
             });
       
-      # Step 8: Save results to data-collection branch
+      # Step 8: Save results to data-collection-v2 branch
       - name: Save Results to Data Branch
         if: steps.check_results.outputs.results_exist == 'true'
         run: |
@@ -165,23 +165,23 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Fetch data-collection branch or create it
-          git fetch origin data-collection 2>/dev/null || echo "Creating new data-collection branch"
+          # Fetch data-collection-v2 branch or create it
+          git fetch origin data-collection-v2 2>/dev/null || echo "Creating new data-collection-v2 branch"
           
-          # Checkout data-collection branch (create if doesn't exist)
-          if git show-ref --verify --quiet refs/remotes/origin/data-collection; then
-            echo "Checking out existing data-collection branch"
-            git checkout data-collection
-            git pull origin data-collection
+          # Checkout data-collection-v2 branch (create if doesn't exist)
+          if git show-ref --verify --quiet refs/remotes/origin/data-collection-v2; then
+            echo "Checking out existing data-collection-v2 branch"
+            git checkout data-collection-v2
+            git pull origin data-collection-v2
           else
-            echo "Creating new orphan data-collection branch"
-            git checkout --orphan data-collection
+            echo "Creating new orphan data-collection-v2 branch"
+            git checkout --orphan data-collection-v2
             git rm -rf . 2>/dev/null || true
             
             # Create initial README
-            echo "# PR Review Data Collection" > README.md
+            echo "# PR Review Data Collection (v2 - Fair Scoring)" > README.md
             echo "" >> README.md
-            echo "This branch stores automated PR review results for thesis analysis." >> README.md
+            echo "This branch stores automated PR review results using fair scoring formula (no bonuses/penalties)." >> README.md
             echo "" >> README.md
             echo "## Structure" >> README.md
             echo "" >> README.md
@@ -214,24 +214,24 @@ jobs:
           git add pr_reviews/
           git commit -m "Add review results: PR #${PR_NUM} - ${TIMESTAMP}"
           
-          # Push to data-collection branch
-          git push origin data-collection
+          # Push to data-collection-v2 branch
+          git push origin data-collection-v2
           
-          echo "✓ Results successfully saved to data-collection branch"
+          echo "✓ Results successfully saved to data-collection-v2 branch"
         continue-on-error: true
       
       # Step 9: Update statistics in README
       - name: Update Statistics
         if: steps.check_results.outputs.results_exist == 'true'
         run: |
-          git checkout data-collection
+          git checkout data-collection-v2
           
           # Count total reviews
           REVIEW_COUNT=$(ls pr_reviews/*.json 2>/dev/null | wc -l)
           
           # Update README with current stats
           cat > README.md <<EOF
-          # PR Review Data Collection
+          # PR Review Data Collection (v2 - Fair Scoring)
           
           This branch stores automated PR review results for thesis analysis.
           
@@ -256,7 +256,7 @@ jobs:
           # Commit updated stats
           git add README.md
           git commit -m "Update stats: ${REVIEW_COUNT} total reviews" || echo "No changes to stats"
-          git push origin data-collection || echo "Nothing to push"
+          git push origin data-collection-v2 || echo "Nothing to push"
           
           echo "✓ Statistics updated: ${REVIEW_COUNT} reviews collected"
         continue-on-error: true
