@@ -7,6 +7,7 @@ Contains intentional issues for testing.
 """
 
 import sqlite3
+import hashlib
 from typing import List, Optional
 
 
@@ -80,17 +81,14 @@ class UserAPI:
         return users
     
     def create_user(self, username: str, email: str, password: str) -> int:
-        """
-        Create new user
-        
-        SECURITY ISSUE: Plain text password storage
-        """
+        """Create new user"""
         cursor = self.connection.cursor()
         
-        # SECURITY ISSUE: Storing password in plain text
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        
         cursor.execute(
             "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-            (username, email, password)  # Plain text password!
+            (username, email, password_hash)
         )
         
         self.connection.commit()
