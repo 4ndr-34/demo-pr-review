@@ -1,0 +1,288 @@
+{
+  "comparison_mode": true,
+  "pr_number": 22,
+  "pr_title": "Feature: Add performance monitoring",
+  "quality_score": 79.5,
+  "quality_grade": "C+",
+  "risk_level": "medium",
+  "recommendation": "Approve with minor comments",
+  "confidence": 0.9,
+  "total_findings": 3,
+  "critical_findings": 0,
+  "high_findings": 2,
+  "medium_findings": 0,
+  "agents_consensus": "divergent_views",
+  "execution_time": 3.9085497856140137,
+  "agent_summaries": {
+    "security": "Security analysis: Found 1 issues (1 low)",
+    "performance": "Performance analysis: Found 1 issues (1 high)",
+    "architecture": "Architecture analysis: Found 1 issues (1 high)"
+  },
+  "priority_issues": [
+    {
+      "priority": 1,
+      "severity": "high",
+      "agent": "performance",
+      "type": "inefficient_algorithm",
+      "file": "src/utils/data_processor.py",
+      "line": 21,
+      "description": "Nested loops causing O(n\u00b2) complexity in process_items method",
+      "recommendation": "Refactor the nested loops to reduce complexity to O(n)",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 2,
+      "severity": "high",
+      "agent": "architecture",
+      "type": "solid_violation",
+      "file": "src/utils/data_processor.py",
+      "line": 19,
+      "description": "The DataProcessor class violates the Single Responsibility Principle by mixing data processing with performance monitoring.",
+      "recommendation": "Separate the performance monitoring logic into a separate class or function to adhere to SRP.",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 3,
+      "severity": "low",
+      "agent": "security",
+      "type": "performance_issue",
+      "file": "src/utils/data_processor.py",
+      "line": 11,
+      "description": "The 'monitor_performance' decorator prints the function execution time but does not directly impact security.",
+      "recommendation": "Consider the impact on performance monitoring and logging overhead.",
+      "action": "Consider addressing in future PR",
+      "confidence": 0.9
+    }
+  ],
+  "all_findings": [
+    {
+      "priority": 1,
+      "severity": "high",
+      "agent": "performance",
+      "type": "inefficient_algorithm",
+      "file": "src/utils/data_processor.py",
+      "line": 21,
+      "description": "Nested loops causing O(n\u00b2) complexity in process_items method",
+      "recommendation": "Refactor the nested loops to reduce complexity to O(n)",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 2,
+      "severity": "high",
+      "agent": "architecture",
+      "type": "solid_violation",
+      "file": "src/utils/data_processor.py",
+      "line": 19,
+      "description": "The DataProcessor class violates the Single Responsibility Principle by mixing data processing with performance monitoring.",
+      "recommendation": "Separate the performance monitoring logic into a separate class or function to adhere to SRP.",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 3,
+      "severity": "low",
+      "agent": "security",
+      "type": "performance_issue",
+      "file": "src/utils/data_processor.py",
+      "line": 11,
+      "description": "The 'monitor_performance' decorator prints the function execution time but does not directly impact security.",
+      "recommendation": "Consider the impact on performance monitoring and logging overhead.",
+      "action": "Consider addressing in future PR",
+      "confidence": 0.9
+    }
+  ],
+  "comparison": {
+    "single_agent": {
+      "quality_score": 43.0,
+      "quality_grade": "F",
+      "findings_count": 12,
+      "findings": [
+        {
+          "type": "information_disclosure",
+          "severity": "medium",
+          "confidence": 0.95,
+          "file": "src/utils/data_processor.py",
+          "line": 20,
+          "description": "Performance metrics are printed directly to stdout using print(). In production environments this can expose internal function names, timing information, and system behavior to logs or console outputs that may be accessible to unauthorized parties. It also reveals the internal architecture and naming conventions of the application.",
+          "recommendation": "Replace print() with a proper logging framework (e.g., Python's built-in 'logging' module). Use logger.debug() or logger.info() with appropriate log levels so that output can be controlled per environment. Example: `import logging; logger = logging.getLogger(__name__); logger.debug('%s took %.3fs', func.__name__, elapsed)`",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "missing_exception_handling",
+          "severity": "high",
+          "confidence": 0.95,
+          "file": "src/utils/data_processor.py",
+          "line": 15,
+          "description": "The monitor_performance decorator does not handle exceptions raised by the wrapped function. If func(*args, **kwargs) raises an exception, elapsed time is never recorded and the exception propagates without any performance data being captured. This also means the decorator silently swallows the timing context on failure, making debugging harder.",
+          "recommendation": "Wrap the function call in a try/finally block to ensure timing is always recorded regardless of success or failure. Example:\n```python\ntry:\n    result = func(*args, **kwargs)\n    return result\nexcept Exception as exc:\n    elapsed = time.time() - start_time\n    logger.warning('%s failed after %.3fs: %s', func.__name__, elapsed, exc)\n    raise\nfinally:\n    elapsed = time.time() - start_time\n    logger.debug('%s took %.3fs', func.__name__, elapsed)\n```",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "unresolved_known_defect",
+          "severity": "high",
+          "confidence": 1.0,
+          "file": "src/utils/data_processor.py",
+          "line": 28,
+          "description": "The PR description claims to add performance monitoring, but the O(n\u00b2) nested loop complexity issue that was explicitly documented in the original code comment has not been fixed \u2014 only the comment was removed. The underlying algorithmic problem still exists. Removing the comment without fixing the issue is actively harmful: it hides a known defect from future developers.",
+          "recommendation": "Fix the O(n\u00b2) algorithm before or alongside adding monitoring. Depending on the use case, use a dictionary/set for O(1) lookups, list comprehensions, or vectorized operations (e.g., pandas). Do not remove documentation of known issues without resolving them.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "performance_regression",
+          "severity": "medium",
+          "confidence": 0.85,
+          "file": "src/utils/data_processor.py",
+          "line": 13,
+          "description": "time.time() is called twice per invocation (start and end), which introduces two system calls per decorated function call. For very high-frequency calls this adds measurable overhead. Additionally, time.time() is not monotonic and can be affected by NTP adjustments or system clock changes, potentially producing negative or inaccurate elapsed times.",
+          "recommendation": "Use time.perf_counter() instead of time.time() for measuring elapsed durations. It is monotonic, higher resolution, and not subject to wall-clock adjustments. Example: `start_time = time.perf_counter()`",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "missing_async_support",
+          "severity": "medium",
+          "confidence": 0.8,
+          "file": "src/utils/data_processor.py",
+          "line": 13,
+          "description": "The decorator only supports synchronous functions. If process_items or any other decorated function is ever converted to async (which is common in modern Python web services and data pipelines), the decorator will silently break: it will return a coroutine object instead of awaiting it, and timing will be meaningless.",
+          "recommendation": "Implement the decorator to support both sync and async functions using inspect.iscoroutinefunction(). Example:\n```python\nimport inspect, asyncio\ndef monitor_performance(func):\n    @wraps(func)\n    async def async_wrapper(*args, **kwargs):\n        start = time.perf_counter()\n        try:\n            return await func(*args, **kwargs)\n        finally:\n            logger.debug('%s took %.3fs', func.__name__, time.perf_counter() - start)\n    @wraps(func)\n    def sync_wrapper(*args, **kwargs):\n        start = time.perf_counter()\n        try:\n            return func(*args, **kwargs)\n        finally:\n            logger.debug('%s took %.3fs', func.__name__, time.perf_counter() - start)\n    return async_wrapper if inspect.iscoroutinefunction(func) else sync_wrapper\n```",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "missing_metrics_persistence",
+          "severity": "medium",
+          "confidence": 0.9,
+          "file": "src/utils/data_processor.py",
+          "line": 20,
+          "description": "Performance data is printed to stdout and immediately discarded. There is no aggregation, storage, or export of metrics. This makes it impossible to track trends, set alerts, or analyze performance over time. The 'performance monitoring' feature as implemented provides no actionable operational value beyond local debugging.",
+          "recommendation": "Integrate with a proper observability solution: use a metrics library such as prometheus_client, statsd, datadog, or OpenTelemetry. At minimum, persist metrics to a structured log with fields for function name, duration, timestamp, and relevant context (e.g., input size). Consider emitting histograms rather than raw timing values.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "no_configurable_threshold",
+          "severity": "low",
+          "confidence": 0.85,
+          "file": "src/utils/data_processor.py",
+          "line": 13,
+          "description": "The decorator always logs every invocation with no ability to configure sampling rate, minimum threshold (e.g., only log if > 100ms), or enable/disable per environment. In high-throughput production systems this will generate excessive log volume and I/O overhead.",
+          "recommendation": "Add optional parameters to the decorator for threshold (only log if elapsed > threshold), sampling_rate, and enabled flag. Use environment variables or a config object to control behavior per deployment environment.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "missing_context_capture",
+          "severity": "low",
+          "confidence": 0.8,
+          "file": "src/utils/data_processor.py",
+          "line": 20,
+          "description": "The performance log only captures function name and elapsed time. It does not capture input size (e.g., len(items)), caller context, thread/process ID, or request/trace ID. This makes it very difficult to correlate performance data with specific workloads or requests in a production environment.",
+          "recommendation": "Enrich the log output with relevant context. For DataProcessor.process_items specifically, log the number of items processed. For general use, consider capturing thread ID and any available trace context. Example: `logger.debug('%s processed %d items in %.3fs', func.__name__, len(args[1]) if len(args) > 1 else 'N/A', elapsed)`",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "documentation_regression",
+          "severity": "low",
+          "confidence": 1.0,
+          "file": "src/utils/data_processor.py",
+          "line": 24,
+          "description": "The original docstring explicitly documented the O(n\u00b2) complexity as a known issue with 'PERFORMANCE ISSUE: O(n\u00b2) complexity'. This was replaced with a generic 'Process list of items with performance monitoring' docstring. Removing documented known issues without fixing them is a documentation regression that will mislead future developers.",
+          "recommendation": "Restore the complexity documentation in the docstring, or fix the underlying issue. The docstring should accurately describe the function's behavior, complexity, and any known limitations. If the O(n\u00b2) issue is tracked elsewhere (e.g., a ticket), reference it in the docstring.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "solid_violation",
+          "severity": "medium",
+          "confidence": 0.85,
+          "file": "src/utils/data_processor.py",
+          "line": 13,
+          "description": "The monitor_performance decorator couples performance monitoring (a cross-cutting concern) directly to the DataProcessor class via direct decoration. This violates the Single Responsibility Principle for the decorator itself (it both measures time AND handles output) and creates tight coupling between the monitoring concern and the business logic class.",
+          "recommendation": "Separate concerns: the decorator should only measure and emit a metric event. A separate handler/sink should decide what to do with that event (log it, store it, send to metrics system). Consider using an observer pattern or a metrics facade that can be swapped per environment.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "architecture"
+          }
+        },
+        {
+          "type": "missing_tests",
+          "severity": "high",
+          "confidence": 0.95,
+          "file": "src/utils/data_processor.py",
+          "line": 0,
+          "description": "No tests are included or referenced for the new monitor_performance decorator. The PR adds new functionality without verifying: (1) that the decorator correctly returns the wrapped function's result, (2) that timing is captured, (3) that exceptions from the wrapped function propagate correctly, (4) that the decorator works with methods (self argument), and (5) that __wrapped__ and other functools.wraps attributes are preserved.",
+          "recommendation": "Add unit tests covering: correct return value passthrough, exception propagation, timing output (mock time.time/perf_counter), decorator metadata preservation (func.__name__, __doc__), and integration with the DataProcessor class. Use unittest.mock.patch to capture and assert on print/logger output.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "thread_safety",
+          "severity": "low",
+          "confidence": 0.6,
+          "file": "src/utils/data_processor.py",
+          "line": 13,
+          "description": "If the decorator is extended in the future to maintain state (e.g., call counts, cumulative timing, moving averages), the current design has no thread-safety provisions. This is a low-severity forward-looking concern given the current stateless implementation, but worth noting for the intended 'performance monitoring' use case.",
+          "recommendation": "If stateful metrics are added (counters, histograms), use threading.Lock() or thread-local storage, or delegate to a thread-safe metrics library. Document the thread-safety guarantees of the decorator.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        }
+      ],
+      "risk_level": "high",
+      "execution_time": 46.76931929588318
+    },
+    "multi_agent": {
+      "quality_score": 79.5,
+      "quality_grade": "C+",
+      "findings_count": 3,
+      "risk_level": "medium",
+      "execution_time": 3.9085497856140137
+    },
+    "advantage": {
+      "more_findings": -9,
+      "quality_difference": 36.5,
+      "time_overhead": -42.860769510269165
+    }
+  }
+}
