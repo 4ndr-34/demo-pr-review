@@ -7,6 +7,7 @@ Contains intentional architecture issues.
 
 from datetime import datetime
 from typing import Optional
+import hashlib
 
 
 class User:
@@ -18,10 +19,39 @@ class User:
     
     def __init__(self, id: int, username: str, email: str, password: str):
         self.id = id
-        self.username = username
-        self.email = email
-        self.password = password
+        self.username = self._validate_and_clean_username(username)
+        self.email = self._validate_and_clean_email(email)
+        self.password = self._hash_and_validate_password(password)
         self.created_at = datetime.now()
+        self._setup_logging()
+        self._initialize_cache()
+        self._connect_to_notification_service()
+    
+    def _validate_and_clean_username(self, username: str) -> str:
+        username = username.strip().lower()
+        if len(username) < 3:
+            raise ValueError("Username too short")
+        return username
+    
+    def _validate_and_clean_email(self, email: str) -> str:
+        email = email.strip().lower()
+        if '@' not in email:
+            raise ValueError("Invalid email")
+        return email
+    
+    def _hash_and_validate_password(self, password: str) -> str:
+        if len(password) < 8:
+            raise ValueError("Password too short")
+        return hashlib.sha256(password.encode()).hexdigest()
+    
+    def _setup_logging(self):
+        self.log_file = f"user_{self.id}.log"
+    
+    def _initialize_cache(self):
+        self.cache = {}
+    
+    def _connect_to_notification_service(self):
+        self.notifications_enabled = True
     
     def validate_password(self, password: str) -> bool:
         """
