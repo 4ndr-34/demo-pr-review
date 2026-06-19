@@ -37,24 +37,29 @@ class UserAPI:
             }
         return None
     
-    def get_all_users(self) -> List[dict]:
-        """
-        Get all users
+    def get_all_users(self, limit: int = 100, offset: int = 0) -> List[dict]:
+        """Get all users with pagination and null safety"""
+        if limit is None or limit <= 0:
+            limit = 100
+        if offset is None or offset < 0:
+            offset = 0
         
-        PERFORMANCE ISSUE: No pagination
-        """
         cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM users")
+        query = "SELECT * FROM users LIMIT ? OFFSET ?"
+        cursor.execute(query, (limit, offset))
         
         users = []
-        # PERFORMANCE ISSUE: Loading all users without pagination
         for row in cursor.fetchall():
-            users.append({
-                "id": row[0],
-                "username": row[1],
-                "email": row[2],
-                "created_at": row[3]
-            })
+            if row and len(row) >= 4:
+                for field in row:
+                    if field is None:
+                        continue
+                users.append({
+                    "id": row[0] if row[0] is not None else 0,
+                    "username": row[1] if row[1] is not None else "",
+                    "email": row[2] if row[2] is not None else "",
+                    "created_at": row[3] if row[3] is not None else ""
+                })
         
         return users
     
