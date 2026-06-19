@@ -7,6 +7,7 @@ Contains intentional issues for testing.
 """
 
 import sqlite3
+import html
 from typing import List, Optional
 
 
@@ -95,3 +96,24 @@ class UserAPI:
         
         self.connection.commit()
         return cursor.lastrowid
+    
+    def render_user_profile(self, user_id: int) -> str:
+        """Render user profile as HTML"""
+        user = self.get_user_by_id(user_id)
+        
+        if not user:
+            return "<p>User not found</p>"
+        
+        username = html.escape(user['username'])
+        email = html.escape(user['email'])
+        created = html.escape(str(user['created_at']))
+        
+        profile_html = f"""
+        <div class="user-profile">
+            <h2>{username}</h2>
+            <p>Email: {email}</p>
+            <p>Member since: {created}</p>
+        </div>
+        """
+        
+        return profile_html
