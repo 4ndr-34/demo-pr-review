@@ -20,12 +20,12 @@ class UserAPI:
         """
         Get user by ID
         
-        SECURITY ISSUE: SQL Injection vulnerability
+        Fixed: Using parameterized query to prevent SQL injection
         """
         cursor = self.connection.cursor()
-        # SECURITY ISSUE: SQL Injection vulnerability
-        query = f"SELECT * FROM users WHERE id = {user_id}"
-        cursor.execute(query)
+        # FIXED: Using parameterized query
+        query = "SELECT * FROM users WHERE id = ?"
+        cursor.execute(query, (user_id,))
         
         row = cursor.fetchone()
         if row:
@@ -37,17 +37,24 @@ class UserAPI:
             }
         return None
     
-    def get_all_users(self) -> List[dict]:
+    def get_all_users(self, limit: int = 100, offset: int = 0) -> List[dict]:
         """
-        Get all users
+        Get all users with pagination
         
-        PERFORMANCE ISSUE: No pagination
+        Fixed: Added pagination to prevent loading all records at once
+        
+        Args:
+            limit: Maximum number of users to return (default 100)
+            offset: Number of users to skip (default 0)
+        
+        Returns:
+            List of users (paginated)
         """
         cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM users")
+        query = "SELECT * FROM users LIMIT ? OFFSET ?"
+        cursor.execute(query, (limit, offset))
         
         users = []
-        # PERFORMANCE ISSUE: Loading all users without pagination
         for row in cursor.fetchall():
             users.append({
                 "id": row[0],
@@ -95,3 +102,25 @@ class UserAPI:
         
         self.connection.commit()
         return cursor.lastrowid
+    
+    def render_user_profile(self, user_id: int) -> str:
+        """
+        Render user profile as HTML
+        
+        NEW METHOD: Generates HTML for user profile display
+        """
+        user = self.get_user_by_id(user_id)
+        
+        if not user:
+            return "<p>User not found</p>"
+        
+        # SECURITY ISSUE: XSS vulnerability - no HTML escaping
+        html = f"""
+        <div class="user-profile">
+            <h2>{user['username']}</h2>
+            <p>Email: {user['email']}</p>
+            <p>Member since: {user['created_at']}</p>
+        </div>
+        """
+        
+        return html
