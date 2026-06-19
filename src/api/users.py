@@ -59,15 +59,10 @@ class UserAPI:
         return users
     
     def search_users(self, query: str) -> List[dict]:
-        """
-        Search users by username
-        
-        SECURITY ISSUE: SQL Injection in search
-        """
+        """Search users by username"""
         cursor = self.connection.cursor()
-        # SECURITY ISSUE: SQL Injection in LIKE clause
-        sql = f"SELECT * FROM users WHERE username LIKE '%{query}%'"
-        cursor.execute(sql)
+        sql = "SELECT * FROM users WHERE username LIKE ?"
+        cursor.execute(sql, (f'%{query}%',))
         
         users = []
         for row in cursor.fetchall():
