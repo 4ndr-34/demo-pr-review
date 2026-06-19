@@ -7,17 +7,28 @@ Contains intentional performance and architecture issues.
 
 from typing import List, Any
 import json
+import time
+from functools import wraps
+
+
+def monitor_performance(func):
+    """Decorator to track function execution time"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        elapsed = time.time() - start_time
+        print(f"{func.__name__} took {elapsed:.3f}s")
+        return result
+    return wrapper
 
 
 class DataProcessor:
     """Data processor with intentional issues"""
     
+    @monitor_performance
     def process_items(self, items: List[dict]) -> List[dict]:
-        """
-        Process list of items
-        
-        PERFORMANCE ISSUE: O(n²) complexity
-        """
+        """Process list of items with performance monitoring"""
         processed = []
         
         # PERFORMANCE ISSUE: Nested loops creating O(n²) complexity
