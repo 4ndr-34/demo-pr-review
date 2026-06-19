@@ -1,0 +1,312 @@
+{
+  "comparison_mode": true,
+  "pr_number": 3,
+  "pr_title": "Security: Fix SQL injection in search_users",
+  "quality_score": 67.0,
+  "quality_grade": "D+",
+  "risk_level": "high",
+  "recommendation": "Request changes before merge",
+  "confidence": 0.91,
+  "total_findings": 4,
+  "critical_findings": 0,
+  "high_findings": 3,
+  "medium_findings": 1,
+  "agents_consensus": "full_agreement",
+  "execution_time": 4.636497974395752,
+  "agent_summaries": {
+    "security": "Security analysis: Found 1 issues (1 high)",
+    "performance": "Performance analysis: Found 1 issues (1 high)",
+    "architecture": "Architecture analysis: Found 2 issues (1 high, 1 medium)"
+  },
+  "priority_issues": [
+    {
+      "priority": 1,
+      "severity": "high",
+      "agent": "security",
+      "type": "sql_injection",
+      "file": "src/api/users.py",
+      "line": 59,
+      "description": "The code is vulnerable to SQL injection due to improper parameterization in the search_users function.",
+      "recommendation": "Use parameterized queries to prevent SQL injection attacks. Replace the query construction with placeholders and pass the user input as parameters.",
+      "action": "Should fix before merge",
+      "confidence": 1.0
+    },
+    {
+      "priority": 2,
+      "severity": "high",
+      "agent": "performance",
+      "type": "database_issue",
+      "file": "src/api/users.py",
+      "line": 59,
+      "description": "Potential SQL injection vulnerability fixed but inefficient query parameterization",
+      "recommendation": "Use parameterized queries with placeholders to prevent SQL injection and improve query performance",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 3,
+      "severity": "high",
+      "agent": "architecture",
+      "type": "solid_violation",
+      "file": "src/api/users.py",
+      "line": 59,
+      "description": "The `search_users` method violates the Single Responsibility Principle by mixing search logic with SQL query construction.",
+      "recommendation": "Separate the SQL query construction into a separate method or class to adhere to SRP.",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 4,
+      "severity": "medium",
+      "agent": "architecture",
+      "type": "code_smell",
+      "file": "src/api/users.py",
+      "line": 59,
+      "description": "The `search_users` method contains inline SQL query construction, which can lead to maintenance issues and potential security vulnerabilities.",
+      "recommendation": "Extract the SQL query construction into a separate method or use an ORM to handle queries.",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.7
+    }
+  ],
+  "all_findings": [
+    {
+      "priority": 1,
+      "severity": "high",
+      "agent": "security",
+      "type": "sql_injection",
+      "file": "src/api/users.py",
+      "line": 59,
+      "description": "The code is vulnerable to SQL injection due to improper parameterization in the search_users function.",
+      "recommendation": "Use parameterized queries to prevent SQL injection attacks. Replace the query construction with placeholders and pass the user input as parameters.",
+      "action": "Should fix before merge",
+      "confidence": 1.0
+    },
+    {
+      "priority": 2,
+      "severity": "high",
+      "agent": "performance",
+      "type": "database_issue",
+      "file": "src/api/users.py",
+      "line": 59,
+      "description": "Potential SQL injection vulnerability fixed but inefficient query parameterization",
+      "recommendation": "Use parameterized queries with placeholders to prevent SQL injection and improve query performance",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 3,
+      "severity": "high",
+      "agent": "architecture",
+      "type": "solid_violation",
+      "file": "src/api/users.py",
+      "line": 59,
+      "description": "The `search_users` method violates the Single Responsibility Principle by mixing search logic with SQL query construction.",
+      "recommendation": "Separate the SQL query construction into a separate method or class to adhere to SRP.",
+      "action": "Should fix before merge",
+      "confidence": 0.9
+    },
+    {
+      "priority": 4,
+      "severity": "medium",
+      "agent": "architecture",
+      "type": "code_smell",
+      "file": "src/api/users.py",
+      "line": 59,
+      "description": "The `search_users` method contains inline SQL query construction, which can lead to maintenance issues and potential security vulnerabilities.",
+      "recommendation": "Extract the SQL query construction into a separate method or use an ORM to handle queries.",
+      "action": "Fix soon, can merge with tracking issue",
+      "confidence": 0.7
+    }
+  ],
+  "comparison": {
+    "single_agent": {
+      "quality_score": 0.0,
+      "quality_grade": "F",
+      "findings_count": 12,
+      "findings": [
+        {
+          "type": "sql_injection_partial_fix",
+          "severity": "medium",
+          "confidence": 0.85,
+          "file": "src/api/users.py",
+          "line": 65,
+          "description": "The SQL injection fix uses parameterized queries correctly for the LIKE clause, which is the right approach. However, the fix is database-driver specific \u2014 the '?' placeholder is SQLite syntax. If this code is ever used with PostgreSQL (psycopg2), MySQL (mysqlclient), or other drivers, the placeholder must be '%s'. This creates a latent portability bug that could resurface as a runtime error or, worse, be 'fixed' by reverting to string formatting.",
+          "recommendation": "Use a database abstraction layer (e.g., SQLAlchemy ORM or Core) that handles placeholder syntax automatically. If raw SQL is required, document the required driver explicitly and add a CI check. For SQLAlchemy Core: `session.execute(text('SELECT * FROM users WHERE username LIKE :q'), {'q': f'%{query}%'})`.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "security"
+          }
+        },
+        {
+          "type": "insufficient_input_validation",
+          "severity": "high",
+          "confidence": 0.9,
+          "file": "src/api/users.py",
+          "line": 62,
+          "description": "While parameterization prevents SQL injection, the `query` parameter has no validation or sanitization. An attacker or misbehaving client can supply: (1) An empty string '', matching all users \u2014 a full data dump. (2) A string of only wildcards like '%%%%', causing a full table scan. (3) Extremely long strings (e.g., 100,000 characters) causing excessive memory allocation and a potential DoS. (4) LIKE wildcard characters '%' and '_' embedded in the query that may return unintended results (e.g., query='a_b' matches 'aXb'). Parameterization protects the database engine from injection but does not constrain query semantics.",
+          "recommendation": "Add input validation: (1) Enforce a minimum length (e.g., >= 2 characters). (2) Enforce a maximum length (e.g., <= 100 characters). (3) Escape LIKE special characters ('%' and '_') in the query string before embedding it in the pattern, e.g., `escaped = query.replace('\\\\', '\\\\\\\\').replace('%', '\\\\%').replace('_', '\\\\_')` and use `LIKE ? ESCAPE '\\\\'`. (4) Raise a 400 Bad Request for invalid input rather than silently returning unexpected results.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "sensitive_data_exposure",
+          "severity": "critical",
+          "confidence": 0.95,
+          "file": "src/api/users.py",
+          "line": 63,
+          "description": "`SELECT * FROM users` returns every column in the users table, which almost certainly includes sensitive fields such as password hashes, salts, MFA secrets, PII (email, phone, address), internal flags, and administrative metadata. This data is then returned to the caller as a raw dict. Any layer above this function that serializes and sends the response to a client will inadvertently leak these fields.",
+          "recommendation": "Explicitly select only the columns needed by the caller: `SELECT id, username, display_name, created_at FROM users WHERE username LIKE ?`. Never use SELECT * in application code that returns data to clients. Define a DTO/schema (e.g., a Pydantic model or dataclass) that whitelists allowed fields and use it to serialize the response.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "missing_result_limit",
+          "severity": "high",
+          "confidence": 0.92,
+          "file": "src/api/users.py",
+          "line": 63,
+          "description": "The query has no LIMIT clause. On a large users table (millions of rows), a query like `LIKE '%a%'` could match hundreds of thousands of rows, consuming large amounts of memory in the Python process, overwhelming the caller, and creating a denial-of-service vector. `cursor.fetchall()` materializes the entire result set into memory at once.",
+          "recommendation": "Add a LIMIT clause to the SQL query (e.g., `LIMIT 50` or a configurable `max_results` parameter). Use `cursor.fetchmany(size)` or a generator/iterator pattern instead of `cursor.fetchall()` to avoid materializing the full result set. Implement pagination (offset/cursor-based) for large result sets.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "resource_leak",
+          "severity": "high",
+          "confidence": 0.95,
+          "file": "src/api/users.py",
+          "line": 64,
+          "description": "The database cursor is never closed. If an exception is raised during `cursor.execute()`, `cursor.fetchall()`, or the row-processing loop, the cursor will never be closed, leaking the resource. Under high load this can exhaust the database connection's cursor limit. The same issue likely exists in `get_all_users()` at line 59.",
+          "recommendation": "Use a context manager: `with self.connection.cursor() as cursor:` (if the driver supports it), or wrap the cursor usage in a try/finally block: `try: ... finally: cursor.close()`. Better yet, use a connection pool with context-managed sessions (e.g., SQLAlchemy's `with Session() as session:`).",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "security"
+          }
+        },
+        {
+          "type": "missing_authentication_authorization",
+          "severity": "critical",
+          "confidence": 0.75,
+          "file": "src/api/users.py",
+          "line": 62,
+          "description": "There is no visible authentication or authorization check on the `search_users` method. User search endpoints are commonly abused for user enumeration \u2014 an attacker can iterate through the alphabet to harvest all usernames in the system. Without rate limiting or access control, this endpoint is an open user enumeration oracle. The fix addresses injection but does nothing to restrict who can call this function or how often.",
+          "recommendation": "Ensure the calling API endpoint requires authentication (e.g., a valid JWT/session). Apply role-based access control if appropriate (e.g., only admins can search all users). Implement rate limiting at the API gateway or application layer. Consider returning only partial/obfuscated results to non-admin users.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "security"
+          }
+        },
+        {
+          "type": "raw_dict_return_type",
+          "severity": "medium",
+          "confidence": 0.88,
+          "file": "src/api/users.py",
+          "line": 69,
+          "description": "The function returns `List[dict]`, where each dict is built from raw database row data. This is an untyped, unvalidated data structure. There is no schema enforcement, so callers have no compile-time or runtime guarantee about which keys are present. This makes the API contract fragile, hinders IDE support, and makes it easy to accidentally expose new columns added to the table in the future.",
+          "recommendation": "Define a typed data class or Pydantic model (e.g., `UserSearchResult`) with explicit fields. Return `List[UserSearchResult]` instead. This enforces the data contract, enables automatic documentation generation, and prevents accidental field exposure.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "missing_error_handling",
+          "severity": "medium",
+          "confidence": 0.9,
+          "file": "src/api/users.py",
+          "line": 64,
+          "description": "There is no exception handling around the database operations. A database error (connection lost, timeout, constraint violation, etc.) will propagate as an unhandled exception to the caller. In a web framework context this often results in a 500 Internal Server Error that may leak stack traces, database schema details, or internal paths to the client.",
+          "recommendation": "Wrap database operations in a try/except block catching the appropriate database exception (e.g., `sqlite3.Error`, `sqlalchemy.exc.SQLAlchemyError`). Log the error with a correlation ID server-side and raise a generic application exception that translates to a safe HTTP 500 response without internal details.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "direct_connection_usage",
+          "severity": "medium",
+          "confidence": 0.8,
+          "file": "src/api/users.py",
+          "line": 64,
+          "description": "The method uses `self.connection` directly, implying a single shared database connection stored on the object. This is not thread-safe: concurrent requests sharing the same connection object will corrupt each other's cursor state. In a multi-threaded web server (e.g., gunicorn with threads, or any async framework), this is a race condition and data integrity bug.",
+          "recommendation": "Use a connection pool (e.g., SQLAlchemy's connection pool, `psycopg2.pool.ThreadedConnectionPool`). Each request should acquire its own connection from the pool, use it, and return it. Never share a single connection across threads.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "missing_tests",
+          "severity": "medium",
+          "confidence": 0.95,
+          "file": "src/api/users.py",
+          "line": 0,
+          "description": "The PR description is N/A and no test files are included in the diff. There are no unit tests verifying: (1) that the parameterized query actually prevents injection (e.g., a test passing `'; DROP TABLE users; --` as query), (2) that LIKE wildcards in user input are handled correctly, (3) that empty queries, None input, or oversized input are handled gracefully, (4) that the result set is properly limited.",
+          "recommendation": "Add unit tests covering: happy path search, SQL injection attempt inputs, empty string input, None input, wildcard-only input, very long input strings, and a case where no users match. Use a test database or mock the cursor. These tests should be part of the same PR as the fix.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "incomplete_fix_scope",
+          "severity": "medium",
+          "confidence": 0.85,
+          "file": "src/api/users.py",
+          "line": 59,
+          "description": "The PR title says 'Fix SQL injection in search_users', but `get_all_users()` at line 59 and potentially other methods in this file also use raw SQL. If those methods have similar string-formatting patterns, they were not reviewed or fixed in this PR. A partial fix gives a false sense of security.",
+          "recommendation": "Audit all methods in this class (and the entire codebase) for similar SQL injection patterns. Use a SAST tool (e.g., Bandit for Python, Semgrep with the `python.lang.security.audit.formatted-sql-query` rule) to find all instances. Fix them in the same PR or create tracked follow-up issues.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        },
+        {
+          "type": "logging_absence",
+          "severity": "low",
+          "confidence": 0.8,
+          "file": "src/api/users.py",
+          "line": 62,
+          "description": "There is no logging of search queries. Without audit logging, there is no way to detect abuse patterns (e.g., automated enumeration), investigate security incidents after the fact, or monitor for unusual query volumes.",
+          "recommendation": "Add structured audit logging for each search call, including: timestamp, caller identity (user ID / IP), query string (sanitized/truncated), and result count. Ensure logs are shipped to a SIEM or centralized log store. Do not log full query strings if they may contain PII.",
+          "code_snippet": null,
+          "context": {
+            "agent": "single_agent",
+            "category": "quality"
+          }
+        }
+      ],
+      "risk_level": "critical",
+      "execution_time": 54.30616784095764
+    },
+    "multi_agent": {
+      "quality_score": 67.0,
+      "quality_grade": "D+",
+      "findings_count": 4,
+      "risk_level": "high",
+      "execution_time": 4.636497974395752
+    },
+    "advantage": {
+      "more_findings": -8,
+      "quality_difference": 67.0,
+      "time_overhead": -49.66966986656189
+    }
+  }
+}
